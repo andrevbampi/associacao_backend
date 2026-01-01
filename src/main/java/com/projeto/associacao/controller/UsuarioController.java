@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.projeto.associacao.model.BusinessRuleException;
 import com.projeto.associacao.model.Usuario;
 import com.projeto.associacao.service.UsuarioService;
 
@@ -26,17 +27,17 @@ public class UsuarioController {
 	}
 	
 	@PostMapping("/")
-	public Usuario cadastrar(@RequestBody Usuario usuario) {
+	public Usuario cadastrar(@RequestBody Usuario usuario) throws BusinessRuleException {
 		return service.cadastrar(usuario);
 	}
 	
 	@PutMapping("/")
-	public Usuario alterar(@RequestBody Usuario usuario) {
+	public Usuario alterar(@RequestBody Usuario usuario) throws BusinessRuleException {
 		return service.alterar(usuario);
 	}
 	
 	@DeleteMapping("/{id}")
-	public void remover(@PathVariable int id) {
+	public void remover(@PathVariable int id) throws BusinessRuleException {
 		service.remover(id);
 	}
 }

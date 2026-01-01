@@ -6,4 +6,5 @@ import com.projeto.associacao.model.Usuario;
 
 public interface UsuarioRepository extends CrudRepository<Usuario, Integer> {
 
+	Usuario findByLogin(String login);
 }
