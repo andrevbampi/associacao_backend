@@ -4,6 +4,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -15,7 +17,10 @@ public class Usuario {
 	private int id;
 	private String login;
 	private String senha;
-	private String nome;
+
+	@OneToOne
+	@JoinColumn(name = "idpessoa", nullable = false, unique = true)
+	private Pessoa pessoa;
 	
 	public int getId() {
 		return id;
@@ -35,12 +40,11 @@ public class Usuario {
 	public void setSenha(String senha) {
 		this.senha = senha;
 	}
-	public String getNome() {
-		return nome;
+	public Pessoa getPessoa() {
+		return pessoa;
 	}
-	public void setNome(String nome) {
-		this.nome = nome;
+	public void setPessoa(Pessoa pessoa) {
+		this.pessoa = pessoa;
 	}
-	
-	
+
 }

@@ -6,4 +6,5 @@ import com.projeto.associacao.model.Pessoa;
 
 public interface PessoaRepository extends CrudRepository <Pessoa, Integer> {
     
+    Pessoa findById(int id);
 }
