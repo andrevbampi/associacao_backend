@@ -126,7 +126,7 @@ public class UsuarioService {
 		return usuario;
 	}
 
-	private UsuarioResponse converterParaResponse(Usuario usuario) {
+	public UsuarioResponse converterParaResponse(Usuario usuario) {
 		UsuarioResponse response = new UsuarioResponse();
 		response.setId(usuario.getId());
 		response.setLogin(usuario.getLogin());
