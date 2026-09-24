@@ -6,6 +6,7 @@ public class UsuarioRequest {
 	private String login;
 	private String senha;
 	private int idPessoa;
+	private boolean ativo;
 	
 	public int getId() {
 		return id;
@@ -30,6 +31,12 @@ public class UsuarioRequest {
 	}
 	public void setIdPessoa(int idPessoa) {
 		this.idPessoa = idPessoa;
+	}
+	public boolean isAtivo() {
+		return ativo;
+	}
+	public void setAtivo(boolean ativo) {
+		this.ativo = ativo;
 	}
 
 }

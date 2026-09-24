@@ -7,6 +7,7 @@ public class UsuarioResponse {
 	private int id;
 	private String login;
 	private Pessoa pessoa;
+	private boolean ativo;
 	
 	public int getId() {
 		return id;
@@ -25,6 +26,12 @@ public class UsuarioResponse {
 	}
 	public void setPessoa(Pessoa pessoa) {
 		this.pessoa = pessoa;
+	}
+	public boolean isAtivo() {
+		return ativo;
+	}
+	public void setAtivo(boolean ativo) {
+		this.ativo = ativo;
 	}
 
 }

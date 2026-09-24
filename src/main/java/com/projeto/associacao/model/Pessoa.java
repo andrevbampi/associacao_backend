@@ -15,16 +15,16 @@ public class Pessoa {
 
     @Id 
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public int id;
-    public int tipo;
-    public String nome;
-    public String documento;
+    private int id;
+    private int tipo;
+    private String nome;
+    private String documento;
 
     @Column(name = "datanascimento")
-    public LocalDate dataNascimento;
-    public String telefone;
-    public String email;
-    public String endereco;
+    private LocalDate dataNascimento;
+    private String telefone;
+    private String email;
+    private String endereco;
 
     public int getId() {
         return id;

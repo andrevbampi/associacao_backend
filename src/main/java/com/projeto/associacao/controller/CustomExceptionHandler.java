@@ -12,6 +12,6 @@ public class CustomExceptionHandler {
 
 	@ExceptionHandler(BusinessRuleException.class)
 	public ResponseEntity<String> handleBusinessRuleException(BusinessRuleException ex) {
-		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
 	}
 }

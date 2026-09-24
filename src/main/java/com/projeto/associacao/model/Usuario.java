@@ -17,6 +17,7 @@ public class Usuario {
 	private int id;
 	private String login;
 	private String senha;
+	private boolean ativo;
 
 	@OneToOne
 	@JoinColumn(name = "idpessoa", nullable = false, unique = true)
@@ -39,6 +40,12 @@ public class Usuario {
 	}
 	public void setSenha(String senha) {
 		this.senha = senha;
+	}
+	public boolean isAtivo() {
+		return ativo;
+	}
+	public void setAtivo(boolean ativo) {
+		this.ativo = ativo;
 	}
 	public Pessoa getPessoa() {
 		return pessoa;

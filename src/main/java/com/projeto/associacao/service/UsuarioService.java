@@ -50,11 +50,16 @@ public class UsuarioService {
 		if (id == 0) {
 			throw new BusinessRuleException("ID não informado.");
 		}
+
+		if (repository.findById(id) == null) {
+			throw new BusinessRuleException("Usuário de ID " + id + " não cadastrado.");
+		}
+
 		repository.deleteById(id);
 	}
 	
 	private Usuario validarUsuario(UsuarioRequest request, boolean edicao) throws BusinessRuleException {
-		if (request.getLogin().trim().equals("")) {
+		if ((request.getLogin() == null) || request.getLogin().isBlank()) {
 			throw new BusinessRuleException("Login não informado.");
 		}
 
@@ -84,14 +89,14 @@ public class UsuarioService {
 				}
 			}
 
-			if (request.getSenha().trim().equals("")) {
+			if ((request.getSenha() == null) || request.getSenha().isBlank()) {
 				request.setSenha(usuarioAux.getSenha());				
 			} else {
 				request.setSenha(passwordEncoder.encode(request.getSenha()));
 			}
 
 		} else {
-			if (request.getSenha().trim().equals("")) {
+			if ((request.getSenha() == null) || request.getSenha().isBlank()) {
 				throw new BusinessRuleException("Senha não informada.");
 			}
 
@@ -103,6 +108,7 @@ public class UsuarioService {
 				throw new BusinessRuleException("Já existe um usuário para a pessoa com o ID " + request.getIdPessoa());
 			}
 
+			request.setId(0);
 			request.setSenha(passwordEncoder.encode(request.getSenha()));
 		}
 
@@ -115,6 +121,7 @@ public class UsuarioService {
 		usuario.setId(request.getId());
 		usuario.setLogin(request.getLogin());
 		usuario.setSenha(request.getSenha());
+		usuario.setAtivo(request.isAtivo());
 		usuario.setPessoa(pessoa);
 		return usuario;
 	}
@@ -123,6 +130,7 @@ public class UsuarioService {
 		UsuarioResponse response = new UsuarioResponse();
 		response.setId(usuario.getId());
 		response.setLogin(usuario.getLogin());
+		response.setAtivo(usuario.isAtivo());
 		response.setPessoa(usuario.getPessoa());
 		return response;
 	}

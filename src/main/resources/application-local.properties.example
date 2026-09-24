@@ -1,0 +1,3 @@
+spring.datasource.url=jdbc:mariadb://localhost/associacao
+spring.datasource.username=root
+spring.datasource.password=
