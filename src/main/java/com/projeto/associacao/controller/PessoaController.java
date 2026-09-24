@@ -33,7 +33,7 @@ public class PessoaController {
 
     @PutMapping("/")
     public Pessoa alterar(@RequestBody Pessoa pessoa) throws BusinessRuleException {
-        return service.cadastrar(pessoa);
+        return service.alterar(pessoa);
     }
 
     @DeleteMapping("/{id}")
