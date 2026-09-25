@@ -124,7 +124,7 @@ public class MembroService {
 		return membro;
 	}
 
-	private MembroResponse converterParaResponse(Membro membro) {
+	public MembroResponse converterParaResponse(Membro membro) {
 		MembroResponse response = new MembroResponse();
 		response.setId(membro.getId());
 		response.setPessoa(membro.getPessoa());
