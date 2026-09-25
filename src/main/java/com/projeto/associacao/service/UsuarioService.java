@@ -27,10 +27,16 @@ public class UsuarioService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-	public Iterable<UsuarioResponse> selecionar() {
-		Iterable<Usuario> usuarios = repository.findAll();
+	public Iterable<UsuarioResponse> selecionar(String nomePessoa, Boolean ativo) {
 		List<UsuarioResponse> responses = new ArrayList<>();
-		for (Usuario usuario : usuarios) {
+		for (Usuario usuario : repository.findAll()) {
+			if ((nomePessoa != null) && !nomePessoa.isBlank()
+					&& !usuario.getPessoa().getNome().toLowerCase().contains(nomePessoa.trim().toLowerCase())) {
+				continue;
+			}
+			if ((ativo != null) && (usuario.isAtivo() != ativo)) {
+				continue;
+			}
 			responses.add(converterParaResponse(usuario));
 		}
 		return responses;

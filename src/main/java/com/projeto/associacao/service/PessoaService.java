@@ -1,5 +1,8 @@
 package com.projeto.associacao.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -8,6 +11,7 @@ import com.projeto.associacao.model.Pessoa;
 import com.projeto.associacao.repository.MembroRepository;
 import com.projeto.associacao.repository.PessoaRepository;
 import com.projeto.associacao.repository.UsuarioRepository;
+import com.projeto.associacao.util.DocumentoValidador;
 
 @Service
 public class PessoaService {
@@ -21,8 +25,24 @@ public class PessoaService {
     @Autowired
     private MembroRepository membroRepository;
 
-    public Iterable<Pessoa> selecionar() {
-        return repository.findAll();
+    public Iterable<Pessoa> selecionar(String nome, Integer tipo, Boolean semUsuario, Boolean semMembro) {
+        List<Pessoa> resultado = new ArrayList<>();
+        for (Pessoa pessoa : repository.findAll()) {
+            if ((nome != null) && !nome.isBlank() && !pessoa.getNome().toLowerCase().contains(nome.trim().toLowerCase())) {
+                continue;
+            }
+            if ((tipo != null) && (pessoa.getTipo() != tipo)) {
+                continue;
+            }
+            if (Boolean.TRUE.equals(semUsuario) && (usuarioRepository.findByPessoa_Id(pessoa.getId()) != null)) {
+                continue;
+            }
+            if (Boolean.TRUE.equals(semMembro) && (membroRepository.findByPessoa_Id(pessoa.getId()) != null)) {
+                continue;
+            }
+            resultado.add(pessoa);
+        }
+        return resultado;
     }
 
     public Pessoa cadastrar(Pessoa pessoa) throws BusinessRuleException {
@@ -75,6 +95,16 @@ public class PessoaService {
 
         if ((pessoa.getDocumento() == null) || pessoa.getDocumento().isBlank()) {
             throw new BusinessRuleException("Documento não informado.");
+        }
+
+        if (pessoa.getTipo() == 1) {
+            if (!DocumentoValidador.validarCpf(pessoa.getDocumento())) {
+                throw new BusinessRuleException("CPF inválido.");
+            }
+        } else if (pessoa.getTipo() == 2) {
+            if (!DocumentoValidador.validarCnpj(pessoa.getDocumento())) {
+                throw new BusinessRuleException("CNPJ inválido.");
+            }
         }
     }
 

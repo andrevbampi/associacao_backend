@@ -8,39 +8,34 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.projeto.associacao.dto.usuario.UsuarioRequest;
-import com.projeto.associacao.dto.usuario.UsuarioResponse;
 import com.projeto.associacao.model.BusinessRuleException;
-import com.projeto.associacao.model.Usuario;
-import com.projeto.associacao.service.UsuarioService;
+import com.projeto.associacao.model.CategoriaProduto;
+import com.projeto.associacao.service.CategoriaProdutoService;
 
 @RestController
-@RequestMapping("/api/usuario")
-public class UsuarioController {
+@RequestMapping("/api/categoria-produto")
+public class CategoriaProdutoController {
 
 	@Autowired
-	private UsuarioService service;
+	private CategoriaProdutoService service;
 
 	@GetMapping("/")
-	public Iterable<UsuarioResponse> selecionar(
-			@RequestParam(required = false) String nomePessoa,
-			@RequestParam(required = false) Boolean ativo) {
-		return service.selecionar(nomePessoa, ativo);
+	public Iterable<CategoriaProduto> selecionar() {
+		return service.selecionar();
 	}
-	
+
 	@PostMapping("/")
-	public UsuarioResponse cadastrar(@RequestBody UsuarioRequest request) throws BusinessRuleException {
-		return service.cadastrar(request);
+	public CategoriaProduto cadastrar(@RequestBody CategoriaProduto categoria) throws BusinessRuleException {
+		return service.cadastrar(categoria);
 	}
-	
+
 	@PutMapping("/")
-	public UsuarioResponse alterar(@RequestBody UsuarioRequest request) throws BusinessRuleException {
-		return service.alterar(request);
+	public CategoriaProduto alterar(@RequestBody CategoriaProduto categoria) throws BusinessRuleException {
+		return service.alterar(categoria);
 	}
-	
+
 	@DeleteMapping("/{id}")
 	public void remover(@PathVariable int id) throws BusinessRuleException {
 		service.remover(id);
