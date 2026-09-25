@@ -71,13 +71,21 @@ CREATE TABLE `historico_membro` (
   CONSTRAINT `historico_membro_tipo_evento_FK` FOREIGN KEY (`idtipoevento`) REFERENCES `tipo_evento` (`id`),
   CONSTRAINT `historico_membro_usuario_FK` FOREIGN KEY (`idusuarioregistro`) REFERENCES `usuario` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+CREATE TABLE `categoria_produto` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `descricao` varchar(100) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 CREATE TABLE `produto` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `descricao` varchar(150) NOT NULL,
   `preco` decimal(10,2) NOT NULL,
   `precomembro` decimal(10,2) NOT NULL,
   `ativo` tinyint(1) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`id`)
+  `idcategoria` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `produto_categoria_produto_FK` (`idcategoria`),
+  CONSTRAINT `produto_categoria_produto_FK` FOREIGN KEY (`idcategoria`) REFERENCES `categoria_produto` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 CREATE TABLE `comanda` (
   `id` int(11) NOT NULL AUTO_INCREMENT,

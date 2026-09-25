@@ -1,6 +1,7 @@
 package com.projeto.associacao.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +44,8 @@ public class ComandaService {
 	@Autowired
 	private MembroRepository membroRepository;
 
-	public Iterable<ComandaResponse> selecionar(String status) throws BusinessRuleException {
+	public Iterable<ComandaResponse> selecionar(String status, Integer idPessoa, String nomeTemporario, LocalDate dataAbertura,
+			Boolean pago, LocalDate dataPagamento) throws BusinessRuleException {
 		Iterable<Comanda> comandas;
 		if ((status == null) || status.isBlank()) {
 			comandas = repository.findAllByOrderByDataAberturaDesc();
@@ -53,6 +55,24 @@ public class ComandaService {
 
 		List<ComandaResponse> responses = new ArrayList<>();
 		for (Comanda comanda : comandas) {
+			if ((idPessoa != null) && ((comanda.getPessoa() == null) || (comanda.getPessoa().getId() != idPessoa))) {
+				continue;
+			}
+			if ((nomeTemporario != null) && !nomeTemporario.isBlank()
+					&& ((comanda.getNomeTemporario() == null)
+							|| !comanda.getNomeTemporario().toLowerCase().contains(nomeTemporario.trim().toLowerCase()))) {
+				continue;
+			}
+			if ((dataAbertura != null) && !dataAbertura.equals(comanda.getDataAbertura().toLocalDate())) {
+				continue;
+			}
+			if ((pago != null) && (comanda.isPago() != pago)) {
+				continue;
+			}
+			if ((dataPagamento != null)
+					&& ((comanda.getDataPagamento() == null) || !dataPagamento.equals(comanda.getDataPagamento().toLocalDate()))) {
+				continue;
+			}
 			responses.add(converterParaResponse(comanda, false));
 		}
 		return responses;
@@ -151,6 +171,22 @@ public class ComandaService {
 		comanda.setDataFechamento(LocalDateTime.now());
 		comanda.setPago(request.isPago());
 		comanda.setDataPagamento(request.isPago() ? LocalDateTime.now() : null);
+
+		return converterParaResponse(repository.save(comanda), true);
+	}
+
+	public ComandaResponse registrarPagamento(int idComanda) throws BusinessRuleException {
+		Comanda comanda = buscarComandaOuFalhar(idComanda);
+
+		if (comanda.getStatus() != StatusComanda.FECHADA) {
+			throw new BusinessRuleException("Só é possível registrar pagamento de uma comanda fechada.");
+		}
+		if (comanda.isPago()) {
+			throw new BusinessRuleException("Essa comanda já está paga.");
+		}
+
+		comanda.setPago(true);
+		comanda.setDataPagamento(LocalDateTime.now());
 
 		return converterParaResponse(repository.save(comanda), true);
 	}

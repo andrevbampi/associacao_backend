@@ -8,10 +8,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.projeto.associacao.dto.produto.ProdutoRequest;
+import com.projeto.associacao.dto.produto.ProdutoResponse;
 import com.projeto.associacao.model.BusinessRuleException;
-import com.projeto.associacao.model.Produto;
 import com.projeto.associacao.service.ProdutoService;
 
 @RestController
@@ -22,18 +24,21 @@ public class ProdutoController {
 	private ProdutoService service;
 
 	@GetMapping("/")
-	public Iterable<Produto> selecionar() {
-		return service.selecionar();
+	public Iterable<ProdutoResponse> selecionar(
+			@RequestParam(required = false) String descricao,
+			@RequestParam(required = false) Integer idCategoria,
+			@RequestParam(required = false) Boolean ativo) {
+		return service.selecionar(descricao, idCategoria, ativo);
 	}
 
 	@PostMapping("/")
-	public Produto cadastrar(@RequestBody Produto produto) throws BusinessRuleException {
-		return service.cadastrar(produto);
+	public ProdutoResponse cadastrar(@RequestBody ProdutoRequest request) throws BusinessRuleException {
+		return service.cadastrar(request);
 	}
 
 	@PutMapping("/")
-	public Produto alterar(@RequestBody Produto produto) throws BusinessRuleException {
-		return service.alterar(produto);
+	public ProdutoResponse alterar(@RequestBody ProdutoRequest request) throws BusinessRuleException {
+		return service.alterar(request);
 	}
 
 	@DeleteMapping("/{id}")

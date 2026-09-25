@@ -7,9 +7,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.LocalDate;
 
 import com.projeto.associacao.dto.comanda.ComandaAberturaRequest;
 import com.projeto.associacao.dto.comanda.ComandaFechamentoRequest;
@@ -26,8 +29,14 @@ public class ComandaController {
 	private ComandaService service;
 
 	@GetMapping("/")
-	public Iterable<ComandaResponse> selecionar(@RequestParam(required = false) String status) throws BusinessRuleException {
-		return service.selecionar(status);
+	public Iterable<ComandaResponse> selecionar(
+			@RequestParam(required = false) String status,
+			@RequestParam(required = false) Integer idPessoa,
+			@RequestParam(required = false) String nomeTemporario,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataAbertura,
+			@RequestParam(required = false) Boolean pago,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataPagamento) throws BusinessRuleException {
+		return service.selecionar(status, idPessoa, nomeTemporario, dataAbertura, pago, dataPagamento);
 	}
 
 	@GetMapping("/{id}")
@@ -58,6 +67,11 @@ public class ComandaController {
 	@PutMapping("/{id}/fechar")
 	public ComandaResponse fechar(@PathVariable int id, @RequestBody ComandaFechamentoRequest request) throws BusinessRuleException {
 		return service.fechar(id, request);
+	}
+
+	@PutMapping("/{id}/pagamento")
+	public ComandaResponse registrarPagamento(@PathVariable int id) throws BusinessRuleException {
+		return service.registrarPagamento(id);
 	}
 
 	@PutMapping("/{id}/cancelar")

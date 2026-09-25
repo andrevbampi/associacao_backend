@@ -8,4 +8,6 @@ public interface ProdutoRepository extends CrudRepository<Produto, Integer> {
 
 	Produto findById(int id);
 
+	boolean existsByCategoria_Id(int idCategoria);
+
 }

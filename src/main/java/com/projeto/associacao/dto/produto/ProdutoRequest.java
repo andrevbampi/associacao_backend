@@ -1,34 +1,15 @@
-package com.projeto.associacao.model;
+package com.projeto.associacao.dto.produto;
 
 import java.math.BigDecimal;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+public class ProdutoRequest {
 
-@Entity
-@Table(name = "produto")
-public class Produto {
-
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
 	private String descricao;
 	private BigDecimal preco;
-
-	@Column(name = "precomembro")
 	private BigDecimal precoMembro;
-
+	private int idCategoria;
 	private boolean ativo;
-
-	@ManyToOne
-	@JoinColumn(name = "idcategoria", nullable = false)
-	private CategoriaProduto categoria;
 
 	public int getId() {
 		return id;
@@ -54,17 +35,17 @@ public class Produto {
 	public void setPrecoMembro(BigDecimal precoMembro) {
 		this.precoMembro = precoMembro;
 	}
+	public int getIdCategoria() {
+		return idCategoria;
+	}
+	public void setIdCategoria(int idCategoria) {
+		this.idCategoria = idCategoria;
+	}
 	public boolean isAtivo() {
 		return ativo;
 	}
 	public void setAtivo(boolean ativo) {
 		this.ativo = ativo;
-	}
-	public CategoriaProduto getCategoria() {
-		return categoria;
-	}
-	public void setCategoria(CategoriaProduto categoria) {
-		this.categoria = categoria;
 	}
 
 }

@@ -29,10 +29,19 @@ public class MembroService {
 	@Autowired
 	private StatusMembroRepository statusRepository;
 
-	public Iterable<MembroResponse> selecionar() {
-		Iterable<Membro> membros = repository.findAll();
+	public Iterable<MembroResponse> selecionar(String nomePessoa, Integer idStatus, Boolean ativo) {
 		List<MembroResponse> responses = new ArrayList<>();
-		for (Membro membro : membros) {
+		for (Membro membro : repository.findAll()) {
+			if ((nomePessoa != null) && !nomePessoa.isBlank()
+					&& !membro.getPessoa().getNome().toLowerCase().contains(nomePessoa.trim().toLowerCase())) {
+				continue;
+			}
+			if ((idStatus != null) && (membro.getStatus().getId() != idStatus)) {
+				continue;
+			}
+			if ((ativo != null) && (membro.isAtivo() != ativo)) {
+				continue;
+			}
 			responses.add(converterParaResponse(membro));
 		}
 		return responses;

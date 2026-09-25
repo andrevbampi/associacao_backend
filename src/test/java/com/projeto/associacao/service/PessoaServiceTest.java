@@ -40,7 +40,7 @@ class PessoaServiceTest {
 		Pessoa pessoa = new Pessoa();
 		pessoa.setTipo(1);
 		pessoa.setNome("Fulano");
-		pessoa.setDocumento("12345678900");
+		pessoa.setDocumento("111.444.777-35");
 		return pessoa;
 	}
 
@@ -99,5 +99,59 @@ class PessoaServiceTest {
 		when(membroRepository.findByPessoa_Id(1)).thenReturn(new Membro());
 		assertThrows(BusinessRuleException.class, () -> service.remover(1));
 		verify(repository, never()).deleteById(any());
+	}
+
+	@Test
+	void cadastrarRejeitaCpfInvalido() {
+		Pessoa pessoa = pessoaValida();
+		pessoa.setDocumento("111.111.111-11");
+		BusinessRuleException ex = assertThrows(BusinessRuleException.class, () -> service.cadastrar(pessoa));
+		assertEquals("CPF inválido.", ex.getMessage());
+	}
+
+	@Test
+	void cadastrarAceitaCnpjValidoParaPessoaJuridica() throws BusinessRuleException {
+		Pessoa pessoa = pessoaValida();
+		pessoa.setTipo(2);
+		pessoa.setDocumento("11.222.333/0001-81");
+		when(repository.save(any(Pessoa.class))).thenAnswer(inv -> inv.getArgument(0));
+		assertEquals("11.222.333/0001-81", service.cadastrar(pessoa).getDocumento());
+	}
+
+	@Test
+	void cadastrarRejeitaCnpjInvalidoParaPessoaJuridica() {
+		Pessoa pessoa = pessoaValida();
+		pessoa.setTipo(2);
+		pessoa.setDocumento("11.222.333/0001-00");
+		BusinessRuleException ex = assertThrows(BusinessRuleException.class, () -> service.cadastrar(pessoa));
+		assertEquals("CNPJ inválido.", ex.getMessage());
+	}
+
+	@Test
+	void selecionarFiltraPorNome() {
+		Pessoa fulano = pessoaValida();
+		fulano.setNome("Fulano de Tal");
+		Pessoa ciclano = pessoaValida();
+		ciclano.setNome("Ciclano da Silva");
+		when(repository.findAll()).thenReturn(java.util.List.of(fulano, ciclano));
+
+		var resultado = service.selecionar("fulano", null, null, null);
+
+		assertEquals(1, ((java.util.List<Pessoa>) resultado).size());
+	}
+
+	@Test
+	void selecionarComSemUsuarioIgnoraPessoaComUsuario() {
+		Pessoa comUsuario = pessoaValida();
+		comUsuario.setId(1);
+		Pessoa semUsuario = pessoaValida();
+		semUsuario.setId(2);
+		when(repository.findAll()).thenReturn(java.util.List.of(comUsuario, semUsuario));
+		when(usuarioRepository.findByPessoa_Id(1)).thenReturn(new Usuario());
+		when(usuarioRepository.findByPessoa_Id(2)).thenReturn(null);
+
+		var resultado = service.selecionar(null, null, true, null);
+
+		assertEquals(1, ((java.util.List<Pessoa>) resultado).size());
 	}
 }

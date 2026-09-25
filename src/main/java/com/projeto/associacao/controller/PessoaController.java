@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.projeto.associacao.model.BusinessRuleException;
@@ -17,13 +18,17 @@ import com.projeto.associacao.service.PessoaService;
 @RestController
 @RequestMapping("/api/pessoa")
 public class PessoaController {
-    
+
     @Autowired
     private PessoaService service;
 
     @GetMapping("/")
-    public Iterable<Pessoa> selecionar() {
-        return  service.selecionar();
+    public Iterable<Pessoa> selecionar(
+            @RequestParam(required = false) String nome,
+            @RequestParam(required = false) Integer tipo,
+            @RequestParam(required = false) Boolean semUsuario,
+            @RequestParam(required = false) Boolean semMembro) {
+        return service.selecionar(nome, tipo, semUsuario, semMembro);
     }
 
     @PostMapping("/")
