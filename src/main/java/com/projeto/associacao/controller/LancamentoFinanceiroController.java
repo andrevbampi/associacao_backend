@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.projeto.associacao.dto.financeiro.LancamentoFinanceiroRequest;
 import com.projeto.associacao.dto.financeiro.LancamentoFinanceiroResponse;
+import com.projeto.associacao.dto.financeiro.ResumoCaixaResponse;
 import com.projeto.associacao.dto.financeiro.ResumoFinanceiroResponse;
 import com.projeto.associacao.model.BusinessRuleException;
 import com.projeto.associacao.service.LancamentoFinanceiroService;
@@ -34,8 +35,9 @@ public class LancamentoFinanceiroController {
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim,
 			@RequestParam(required = false) Integer idCategoriaFinanceira,
 			@RequestParam(required = false) String tipo,
-			@RequestParam(required = false) Boolean pago) throws BusinessRuleException {
-		return service.selecionar(dataInicio, dataFim, idCategoriaFinanceira, tipo, pago);
+			@RequestParam(required = false) Boolean pago,
+			@RequestParam(required = false) Integer idCaixa) throws BusinessRuleException {
+		return service.selecionar(dataInicio, dataFim, idCategoriaFinanceira, tipo, pago, idCaixa);
 	}
 
 	@GetMapping("/resumo")
@@ -43,6 +45,11 @@ public class LancamentoFinanceiroController {
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInicio,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFim) {
 		return service.resumo(dataInicio, dataFim);
+	}
+
+	@GetMapping("/resumo-por-caixa")
+	public Iterable<ResumoCaixaResponse> resumoPorCaixa() {
+		return service.resumoPorCaixa();
 	}
 
 	@PostMapping("/")

@@ -2,13 +2,21 @@
 -- Gerado com: mariadb-dump --no-data --skip-comments associacao
 
 
+CREATE TABLE `caixa` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `nome` varchar(100) NOT NULL,
+  `ativo` tinyint(1) NOT NULL DEFAULT 1,
+  `observacao` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `caixa_unique` (`nome`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 CREATE TABLE `categoria_financeira` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `descricao` varchar(100) NOT NULL,
   `tipo` varchar(20) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `categoria_financeira_unique` (`descricao`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 CREATE TABLE `categoria_produto` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `descricao` varchar(100) NOT NULL,
@@ -29,7 +37,7 @@ CREATE TABLE `comanda` (
   PRIMARY KEY (`id`),
   KEY `comanda_pessoa_FK` (`idpessoa`),
   CONSTRAINT `comanda_pessoa_FK` FOREIGN KEY (`idpessoa`) REFERENCES `pessoa` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 CREATE TABLE `historico_membro` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `idmembro` int(11) NOT NULL,
@@ -59,10 +67,11 @@ CREATE TABLE `item_comanda` (
   KEY `item_comanda_produto_FK` (`idproduto`),
   CONSTRAINT `item_comanda_comanda_FK` FOREIGN KEY (`idcomanda`) REFERENCES `comanda` (`id`),
   CONSTRAINT `item_comanda_produto_FK` FOREIGN KEY (`idproduto`) REFERENCES `produto` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 CREATE TABLE `lancamento_financeiro` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `idcategoriafinanceira` int(11) NOT NULL,
+  `idcaixa` int(11) NOT NULL,
   `tipo` varchar(20) NOT NULL,
   `valor` decimal(10,2) NOT NULL,
   `data` date NOT NULL,
@@ -81,12 +90,14 @@ CREATE TABLE `lancamento_financeiro` (
   KEY `lancamento_financeiro_membro_FK` (`idmembro`),
   KEY `lancamento_financeiro_comanda_FK` (`idcomanda`),
   KEY `lancamento_financeiro_usuario_FK` (`idusuario`),
+  KEY `lancamento_financeiro_caixa_FK` (`idcaixa`),
+  CONSTRAINT `lancamento_financeiro_caixa_FK` FOREIGN KEY (`idcaixa`) REFERENCES `caixa` (`id`),
   CONSTRAINT `lancamento_financeiro_categoria_FK` FOREIGN KEY (`idcategoriafinanceira`) REFERENCES `categoria_financeira` (`id`),
   CONSTRAINT `lancamento_financeiro_comanda_FK` FOREIGN KEY (`idcomanda`) REFERENCES `comanda` (`id`),
   CONSTRAINT `lancamento_financeiro_membro_FK` FOREIGN KEY (`idmembro`) REFERENCES `membro` (`id`),
   CONSTRAINT `lancamento_financeiro_pessoa_FK` FOREIGN KEY (`idpessoa`) REFERENCES `pessoa` (`id`),
   CONSTRAINT `lancamento_financeiro_usuario_FK` FOREIGN KEY (`idusuario`) REFERENCES `usuario` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 CREATE TABLE `marco_membro` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `descricao` varchar(255) NOT NULL,
@@ -118,12 +129,21 @@ CREATE TABLE `movimento_estoque` (
   `observacao` varchar(500) DEFAULT NULL,
   `origem` varchar(20) NOT NULL,
   `idorigem` int(11) DEFAULT NULL,
+  `estornado` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `movimento_estoque_produto_FK` (`idproduto`),
   KEY `movimento_estoque_usuario_FK` (`idusuario`),
   CONSTRAINT `movimento_estoque_produto_FK` FOREIGN KEY (`idproduto`) REFERENCES `produto` (`id`),
   CONSTRAINT `movimento_estoque_usuario_FK` FOREIGN KEY (`idusuario`) REFERENCES `usuario` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=36 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+CREATE TABLE `parametro_sistema` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `chave` varchar(100) NOT NULL,
+  `valor` varchar(500) DEFAULT NULL,
+  `descricao` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `parametro_sistema_unique` (`chave`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 CREATE TABLE `pessoa` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `tipo` int(11) NOT NULL DEFAULT 1 COMMENT '1 = física; 2 = jurídica',
@@ -134,7 +154,7 @@ CREATE TABLE `pessoa` (
   `email` varchar(100) DEFAULT NULL,
   `endereco` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 CREATE TABLE `produto` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `descricao` varchar(150) NOT NULL,
@@ -170,4 +190,4 @@ CREATE TABLE `usuario` (
   UNIQUE KEY `usuario_unique` (`login`),
   UNIQUE KEY `usuario_unique_1` (`idpessoa`),
   CONSTRAINT `usuario_pessoa_FK` FOREIGN KEY (`idpessoa`) REFERENCES `pessoa` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=38 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;

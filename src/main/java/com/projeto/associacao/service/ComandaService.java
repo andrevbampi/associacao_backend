@@ -22,6 +22,7 @@ import com.projeto.associacao.model.OrigemMovimentoEstoque;
 import com.projeto.associacao.model.Pessoa;
 import com.projeto.associacao.model.Produto;
 import com.projeto.associacao.model.StatusComanda;
+import com.projeto.associacao.repository.CaixaRepository;
 import com.projeto.associacao.repository.ComandaRepository;
 import com.projeto.associacao.repository.ItemComandaRepository;
 import com.projeto.associacao.repository.MembroRepository;
@@ -47,10 +48,16 @@ public class ComandaService {
 	private MembroRepository membroRepository;
 
 	@Autowired
+	private CaixaRepository caixaRepository;
+
+	@Autowired
 	private EstoqueService estoqueService;
 
 	@Autowired
 	private LancamentoFinanceiroService lancamentoFinanceiroService;
+
+	@Autowired
+	private ParametroSistemaService parametroSistemaService;
 
 	public Iterable<ComandaResponse> selecionar(String status, Integer idPessoa, String nomeTemporario, LocalDate dataAbertura,
 			Boolean pago, LocalDate dataPagamento) throws BusinessRuleException {
@@ -180,13 +187,14 @@ public class ComandaService {
 		comanda.setDataFechamento(LocalDateTime.now());
 
 		if (request.isPago()) {
-			efetivarPagamento(comanda, converterFormaPagamento(request.getFormaPagamento()), loginUsuarioAutenticado);
+			int idCaixa = determinarCaixaComanda(request.getIdCaixa());
+			efetivarPagamento(comanda, converterFormaPagamento(request.getFormaPagamento()), idCaixa, loginUsuarioAutenticado);
 		}
 
 		return converterParaResponse(repository.save(comanda), true);
 	}
 
-	public ComandaResponse registrarPagamento(int idComanda, String formaPagamento, String loginUsuarioAutenticado) throws BusinessRuleException {
+	public ComandaResponse registrarPagamento(int idComanda, String formaPagamento, Integer idCaixaRequest, String loginUsuarioAutenticado) throws BusinessRuleException {
 		Comanda comanda = buscarComandaOuFalhar(idComanda);
 
 		if (comanda.getStatus() != StatusComanda.FECHADA) {
@@ -196,15 +204,35 @@ public class ComandaService {
 			throw new BusinessRuleException("Essa comanda já está paga.");
 		}
 
-		efetivarPagamento(comanda, converterFormaPagamento(formaPagamento), loginUsuarioAutenticado);
+		int idCaixa = determinarCaixaComanda(idCaixaRequest);
+		efetivarPagamento(comanda, converterFormaPagamento(formaPagamento), idCaixa, loginUsuarioAutenticado);
 
 		return converterParaResponse(repository.save(comanda), true);
+	}
+
+	// Define qual caixa usar ao registrar o pagamento de uma comanda: se o
+	// parâmetro de sistema CAIXA_COMANDA estiver configurado (e apontar para um
+	// caixa que existe), ele é usado automaticamente; caso contrário, o caixa
+	// informado na requisição é obrigatório.
+	private int determinarCaixaComanda(Integer idCaixaRequest) throws BusinessRuleException {
+		Integer idCaixaParametro = parametroSistemaService.buscarValorInteiro(ParametroSistemaService.CAIXA_COMANDA);
+		if ((idCaixaParametro != null) && (caixaRepository.findById(idCaixaParametro.intValue()) != null)) {
+			return idCaixaParametro;
+		}
+
+		if ((idCaixaRequest == null) || (idCaixaRequest == 0)) {
+			throw new BusinessRuleException("Selecione o caixa para registrar o pagamento.");
+		}
+		if (caixaRepository.findById(idCaixaRequest.intValue()) == null) {
+			throw new BusinessRuleException("Não existe caixa cadastrado com o ID " + idCaixaRequest);
+		}
+		return idCaixaRequest;
 	}
 
 	// Ao registrar o pagamento (seja no fechamento ou depois), gera
 	// automaticamente a saída de estoque de cada item vendido e o lançamento
 	// financeiro de receita correspondente — nunca calculado/aceito do cliente.
-	private void efetivarPagamento(Comanda comanda, FormaPagamento formaPagamento, String loginUsuarioAutenticado) throws BusinessRuleException {
+	private void efetivarPagamento(Comanda comanda, FormaPagamento formaPagamento, int idCaixa, String loginUsuarioAutenticado) throws BusinessRuleException {
 		comanda.setPago(true);
 		comanda.setDataPagamento(LocalDateTime.now());
 		comanda.setFormaPagamento(formaPagamento);
@@ -213,7 +241,7 @@ public class ComandaService {
 			estoqueService.registrarSaidaPorVenda(item.getProduto().getId(), item.getQuantidade(), comanda.getId(), loginUsuarioAutenticado);
 		}
 
-		lancamentoFinanceiroService.gerarReceitaComanda(comanda, comanda.getValorTotal(), formaPagamento, loginUsuarioAutenticado);
+		lancamentoFinanceiroService.gerarReceitaComanda(comanda, comanda.getValorTotal(), formaPagamento, idCaixa, loginUsuarioAutenticado);
 	}
 
 	// Reverte o pagamento de uma comanda: estorna os movimentos de estoque e o

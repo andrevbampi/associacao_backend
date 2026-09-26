@@ -73,7 +73,7 @@ public class ComandaController {
 
 	@PutMapping("/{id}/pagamento")
 	public ComandaResponse registrarPagamento(@PathVariable int id, @RequestBody(required = false) ComandaPagamentoRequest request, Authentication authentication) throws BusinessRuleException {
-		return service.registrarPagamento(id, request != null ? request.getFormaPagamento() : null, authentication.getName());
+		return service.registrarPagamento(id, request != null ? request.getFormaPagamento() : null, request != null ? request.getIdCaixa() : null, authentication.getName());
 	}
 
 	@PutMapping("/{id}/desfazer-pagamento")
