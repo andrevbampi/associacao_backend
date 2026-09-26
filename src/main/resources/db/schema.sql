@@ -2,6 +2,25 @@
 -- Gerado com: mariadb-dump --no-data --skip-comments associacao
 
 
+CREATE TABLE `ata` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `dataata` date NOT NULL,
+  `idpessoaredator` int(11) DEFAULT NULL,
+  `nomeredator` varchar(240) DEFAULT NULL,
+  `titulo` varchar(255) DEFAULT NULL,
+  `conteudo` longtext NOT NULL,
+  `datahoracadastro` datetime NOT NULL,
+  `idusuariocadastro` int(11) NOT NULL,
+  `datahoraultimaalteracao` datetime NOT NULL,
+  `idusuarioultimaalteracao` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ata_pessoa_redator_FK` (`idpessoaredator`),
+  KEY `ata_usuario_cadastro_FK` (`idusuariocadastro`),
+  KEY `ata_usuario_ultima_alteracao_FK` (`idusuarioultimaalteracao`),
+  CONSTRAINT `ata_pessoa_redator_FK` FOREIGN KEY (`idpessoaredator`) REFERENCES `pessoa` (`id`),
+  CONSTRAINT `ata_usuario_cadastro_FK` FOREIGN KEY (`idusuariocadastro`) REFERENCES `usuario` (`id`),
+  CONSTRAINT `ata_usuario_ultima_alteracao_FK` FOREIGN KEY (`idusuarioultimaalteracao`) REFERENCES `usuario` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 CREATE TABLE `caixa` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `nome` varchar(100) NOT NULL,
@@ -38,6 +57,21 @@ CREATE TABLE `comanda` (
   KEY `comanda_pessoa_FK` (`idpessoa`),
   CONSTRAINT `comanda_pessoa_FK` FOREIGN KEY (`idpessoa`) REFERENCES `pessoa` (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+CREATE TABLE `documento_ata` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `idata` int(11) NOT NULL,
+  `nomeoriginal` varchar(255) NOT NULL,
+  `contenttype` varchar(100) NOT NULL,
+  `tamanho` bigint(20) NOT NULL,
+  `arquivo` longblob NOT NULL,
+  `dataupload` datetime NOT NULL,
+  `idusuarioupload` int(11) NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `documento_ata_ata_FK` (`idata`),
+  KEY `documento_ata_usuario_FK` (`idusuarioupload`),
+  CONSTRAINT `documento_ata_ata_FK` FOREIGN KEY (`idata`) REFERENCES `ata` (`id`),
+  CONSTRAINT `documento_ata_usuario_FK` FOREIGN KEY (`idusuarioupload`) REFERENCES `usuario` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 CREATE TABLE `documento_pessoa` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `idpessoa` int(11) NOT NULL,
@@ -52,7 +86,7 @@ CREATE TABLE `documento_pessoa` (
   KEY `documento_pessoa_usuario_FK` (`idusuarioupload`),
   CONSTRAINT `documento_pessoa_pessoa_FK` FOREIGN KEY (`idpessoa`) REFERENCES `pessoa` (`id`),
   CONSTRAINT `documento_pessoa_usuario_FK` FOREIGN KEY (`idusuarioupload`) REFERENCES `usuario` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 CREATE TABLE `historico_membro` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `idmembro` int(11) NOT NULL,
@@ -176,11 +210,12 @@ CREATE TABLE `pessoa` (
   `telefone` varchar(50) DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
   `endereco` varchar(255) DEFAULT NULL,
+  `sexo` varchar(20) DEFAULT NULL,
   `foto` longblob DEFAULT NULL,
   `fotocontenttype` varchar(100) DEFAULT NULL,
   `fotonomeoriginal` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
 CREATE TABLE `produto` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `descricao` varchar(150) NOT NULL,
@@ -219,4 +254,4 @@ CREATE TABLE `usuario` (
   UNIQUE KEY `usuario_unique` (`login`),
   UNIQUE KEY `usuario_unique_1` (`idpessoa`),
   CONSTRAINT `usuario_pessoa_FK` FOREIGN KEY (`idpessoa`) REFERENCES `pessoa` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=43 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_uca1400_ai_ci;

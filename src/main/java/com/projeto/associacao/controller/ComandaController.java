@@ -35,10 +35,12 @@ public class ComandaController {
 			@RequestParam(required = false) String status,
 			@RequestParam(required = false) Integer idPessoa,
 			@RequestParam(required = false) String nomeTemporario,
-			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataAbertura,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataAberturaInicio,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataAberturaFim,
 			@RequestParam(required = false) Boolean pago,
-			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataPagamento) throws BusinessRuleException {
-		return service.selecionar(status, idPessoa, nomeTemporario, dataAbertura, pago, dataPagamento);
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataPagamentoInicio,
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataPagamentoFim) throws BusinessRuleException {
+		return service.selecionar(status, idPessoa, nomeTemporario, dataAberturaInicio, dataAberturaFim, pago, dataPagamentoInicio, dataPagamentoFim);
 	}
 
 	@GetMapping("/{id}")
