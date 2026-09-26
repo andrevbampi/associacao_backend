@@ -1,11 +1,13 @@
 package com.projeto.associacao.service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.projeto.associacao.dto.produto.ProdutoRequest;
 import com.projeto.associacao.dto.produto.ProdutoResponse;
@@ -16,6 +18,7 @@ import com.projeto.associacao.model.StatusComanda;
 import com.projeto.associacao.repository.CategoriaProdutoRepository;
 import com.projeto.associacao.repository.ItemComandaRepository;
 import com.projeto.associacao.repository.ProdutoRepository;
+import com.projeto.associacao.util.ArquivoValidador;
 
 @Service
 public class ProdutoService {
@@ -71,6 +74,39 @@ public class ProdutoService {
 		}
 
 		repository.deleteById(id);
+	}
+
+	public void salvarFoto(int id, MultipartFile arquivo) throws BusinessRuleException {
+		Produto produto = buscarOuFalhar(id);
+		ArquivoValidador.validarImagem(arquivo.getContentType(), arquivo.getSize());
+
+		try {
+			produto.setFoto(arquivo.getBytes());
+		} catch (IOException ex) {
+			throw new BusinessRuleException("Não foi possível ler o arquivo enviado.");
+		}
+		produto.setFotoContentType(arquivo.getContentType());
+		produto.setFotoNomeOriginal(arquivo.getOriginalFilename());
+		repository.save(produto);
+	}
+
+	public void removerFoto(int id) throws BusinessRuleException {
+		Produto produto = buscarOuFalhar(id);
+		produto.setFoto(null);
+		produto.setFotoContentType(null);
+		produto.setFotoNomeOriginal(null);
+		repository.save(produto);
+	}
+
+	public Produto buscarOuFalhar(int id) throws BusinessRuleException {
+		if (id == 0) {
+			throw new BusinessRuleException("ID não informado.");
+		}
+		Produto produto = repository.findById(id);
+		if (produto == null) {
+			throw new BusinessRuleException("Produto de ID " + id + " não cadastrado.");
+		}
+		return produto;
 	}
 
 	private Produto validarProduto(ProdutoRequest request, boolean edicao) throws BusinessRuleException {
@@ -139,6 +175,7 @@ public class ProdutoService {
 		response.setEstoqueMinimo(produto.getEstoqueMinimo());
 		response.setControlaEstoque(produto.isControlaEstoque());
 		response.setEstoqueDisponivel(calcularEstoqueDisponivel(produto));
+		response.setTemFoto((produto.getFoto() != null) && (produto.getFoto().length > 0));
 		return response;
 	}
 

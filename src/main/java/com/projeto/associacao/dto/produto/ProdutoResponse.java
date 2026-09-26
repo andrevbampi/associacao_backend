@@ -16,6 +16,7 @@ public class ProdutoResponse {
 	private Integer estoqueMinimo;
 	private boolean controlaEstoque;
 	private int estoqueDisponivel;
+	private boolean temFoto;
 
 	public int getId() {
 		return id;
@@ -76,6 +77,12 @@ public class ProdutoResponse {
 	}
 	public void setEstoqueDisponivel(int estoqueDisponivel) {
 		this.estoqueDisponivel = estoqueDisponivel;
+	}
+	public boolean isTemFoto() {
+		return temFoto;
+	}
+	public void setTemFoto(boolean temFoto) {
+		this.temFoto = temFoto;
 	}
 
 }
