@@ -16,7 +16,9 @@ import com.projeto.associacao.dto.comanda.ItemComandaRequest;
 import com.projeto.associacao.dto.comanda.ItemComandaResponse;
 import com.projeto.associacao.model.BusinessRuleException;
 import com.projeto.associacao.model.Comanda;
+import com.projeto.associacao.model.FormaPagamento;
 import com.projeto.associacao.model.ItemComanda;
+import com.projeto.associacao.model.OrigemMovimentoEstoque;
 import com.projeto.associacao.model.Pessoa;
 import com.projeto.associacao.model.Produto;
 import com.projeto.associacao.model.StatusComanda;
@@ -43,6 +45,12 @@ public class ComandaService {
 
 	@Autowired
 	private MembroRepository membroRepository;
+
+	@Autowired
+	private EstoqueService estoqueService;
+
+	@Autowired
+	private LancamentoFinanceiroService lancamentoFinanceiroService;
 
 	public Iterable<ComandaResponse> selecionar(String status, Integer idPessoa, String nomeTemporario, LocalDate dataAbertura,
 			Boolean pago, LocalDate dataPagamento) throws BusinessRuleException {
@@ -164,18 +172,21 @@ public class ComandaService {
 		return recalcularERetornar(comanda);
 	}
 
-	public ComandaResponse fechar(int idComanda, ComandaFechamentoRequest request) throws BusinessRuleException {
+	// loginUsuarioAutenticado vem do token JWT, nunca do corpo da requisição.
+	public ComandaResponse fechar(int idComanda, ComandaFechamentoRequest request, String loginUsuarioAutenticado) throws BusinessRuleException {
 		Comanda comanda = buscarComandaAbertaOuFalhar(idComanda);
 
 		comanda.setStatus(StatusComanda.FECHADA);
 		comanda.setDataFechamento(LocalDateTime.now());
-		comanda.setPago(request.isPago());
-		comanda.setDataPagamento(request.isPago() ? LocalDateTime.now() : null);
+
+		if (request.isPago()) {
+			efetivarPagamento(comanda, converterFormaPagamento(request.getFormaPagamento()), loginUsuarioAutenticado);
+		}
 
 		return converterParaResponse(repository.save(comanda), true);
 	}
 
-	public ComandaResponse registrarPagamento(int idComanda) throws BusinessRuleException {
+	public ComandaResponse registrarPagamento(int idComanda, String formaPagamento, String loginUsuarioAutenticado) throws BusinessRuleException {
 		Comanda comanda = buscarComandaOuFalhar(idComanda);
 
 		if (comanda.getStatus() != StatusComanda.FECHADA) {
@@ -185,8 +196,65 @@ public class ComandaService {
 			throw new BusinessRuleException("Essa comanda já está paga.");
 		}
 
+		efetivarPagamento(comanda, converterFormaPagamento(formaPagamento), loginUsuarioAutenticado);
+
+		return converterParaResponse(repository.save(comanda), true);
+	}
+
+	// Ao registrar o pagamento (seja no fechamento ou depois), gera
+	// automaticamente a saída de estoque de cada item vendido e o lançamento
+	// financeiro de receita correspondente — nunca calculado/aceito do cliente.
+	private void efetivarPagamento(Comanda comanda, FormaPagamento formaPagamento, String loginUsuarioAutenticado) throws BusinessRuleException {
 		comanda.setPago(true);
 		comanda.setDataPagamento(LocalDateTime.now());
+		comanda.setFormaPagamento(formaPagamento);
+
+		for (ItemComanda item : itemRepository.findByComanda_Id(comanda.getId())) {
+			estoqueService.registrarSaidaPorVenda(item.getProduto().getId(), item.getQuantidade(), comanda.getId(), loginUsuarioAutenticado);
+		}
+
+		lancamentoFinanceiroService.gerarReceitaComanda(comanda, comanda.getValorTotal(), formaPagamento, loginUsuarioAutenticado);
+	}
+
+	// Reverte o pagamento de uma comanda: estorna os movimentos de estoque e o
+	// lançamento financeiro gerados automaticamente por ele.
+	public ComandaResponse desfazerPagamento(int idComanda, String loginUsuarioAutenticado) throws BusinessRuleException {
+		Comanda comanda = buscarComandaOuFalhar(idComanda);
+
+		if (!comanda.isPago()) {
+			throw new BusinessRuleException("Essa comanda não está paga.");
+		}
+
+		desfazerEfeitosDoPagamento(comanda, loginUsuarioAutenticado);
+
+		return converterParaResponse(repository.save(comanda), true);
+	}
+
+	private void desfazerEfeitosDoPagamento(Comanda comanda, String loginUsuarioAutenticado) throws BusinessRuleException {
+		estoqueService.estornarMovimentosDeOrigem(OrigemMovimentoEstoque.VENDA, comanda.getId(), loginUsuarioAutenticado);
+		lancamentoFinanceiroService.estornarPorComanda(comanda.getId());
+
+		comanda.setPago(false);
+		comanda.setDataPagamento(null);
+		comanda.setFormaPagamento(null);
+	}
+
+	// Reabre uma comanda fechada. Se ela já estava paga, primeiro estorna os
+	// efeitos do pagamento (estoque e financeiro) para não deixar rastro de uma
+	// venda que, tecnicamente, deixou de existir.
+	public ComandaResponse desfazerFechamento(int idComanda, String loginUsuarioAutenticado) throws BusinessRuleException {
+		Comanda comanda = buscarComandaOuFalhar(idComanda);
+
+		if (comanda.getStatus() != StatusComanda.FECHADA) {
+			throw new BusinessRuleException("Só é possível desfazer o fechamento de uma comanda fechada.");
+		}
+
+		if (comanda.isPago()) {
+			desfazerEfeitosDoPagamento(comanda, loginUsuarioAutenticado);
+		}
+
+		comanda.setStatus(StatusComanda.ABERTA);
+		comanda.setDataFechamento(null);
 
 		return converterParaResponse(repository.save(comanda), true);
 	}
@@ -200,6 +268,17 @@ public class ComandaService {
 		comanda.setDataPagamento(null);
 
 		return converterParaResponse(repository.save(comanda), true);
+	}
+
+	private FormaPagamento converterFormaPagamento(String formaPagamento) throws BusinessRuleException {
+		if ((formaPagamento == null) || formaPagamento.isBlank()) {
+			return FormaPagamento.OUTRO;
+		}
+		try {
+			return FormaPagamento.valueOf(formaPagamento.trim().toUpperCase());
+		} catch (IllegalArgumentException ex) {
+			throw new BusinessRuleException("Forma de pagamento \"" + formaPagamento + "\" inválida.");
+		}
 	}
 
 	private BigDecimal precoParaComanda(Comanda comanda, Produto produto) {
@@ -269,6 +348,7 @@ public class ComandaService {
 		response.setValorTotal(comanda.getValorTotal());
 		response.setPago(comanda.isPago());
 		response.setDataPagamento(comanda.getDataPagamento());
+		response.setFormaPagamento(comanda.getFormaPagamento());
 		response.setObservacao(comanda.getObservacao());
 
 		if (incluirItens) {

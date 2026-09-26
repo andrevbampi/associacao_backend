@@ -115,7 +115,15 @@ class PessoaServiceTest {
 		pessoa.setTipo(2);
 		pessoa.setDocumento("11.222.333/0001-81");
 		when(repository.save(any(Pessoa.class))).thenAnswer(inv -> inv.getArgument(0));
-		assertEquals("11.222.333/0001-81", service.cadastrar(pessoa).getDocumento());
+		assertEquals("11222333000181", service.cadastrar(pessoa).getDocumento());
+	}
+
+	@Test
+	void cadastrarRemoveMascaraDoDocumentoAntesDeGravar() throws BusinessRuleException {
+		Pessoa pessoa = pessoaValida();
+		pessoa.setDocumento("111.444.777-35");
+		when(repository.save(any(Pessoa.class))).thenAnswer(inv -> inv.getArgument(0));
+		assertEquals("11144477735", service.cadastrar(pessoa).getDocumento());
 	}
 
 	@Test

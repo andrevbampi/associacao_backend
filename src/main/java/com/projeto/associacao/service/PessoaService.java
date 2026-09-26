@@ -97,6 +97,10 @@ public class PessoaService {
             throw new BusinessRuleException("Documento não informado.");
         }
 
+        // A máscara (pontos/traço) é só visual, aplicada no front-end; o que fica
+        // gravado é sempre só os caracteres do documento em si.
+        pessoa.setDocumento(pessoa.getDocumento().replaceAll("[^0-9A-Za-z]", "").toUpperCase());
+
         if (pessoa.getTipo() == 1) {
             if (!DocumentoValidador.validarCpf(pessoa.getDocumento())) {
                 throw new BusinessRuleException("CPF inválido.");

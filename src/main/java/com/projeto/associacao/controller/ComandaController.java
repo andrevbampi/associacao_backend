@@ -1,6 +1,7 @@
 package com.projeto.associacao.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 
 import com.projeto.associacao.dto.comanda.ComandaAberturaRequest;
 import com.projeto.associacao.dto.comanda.ComandaFechamentoRequest;
+import com.projeto.associacao.dto.comanda.ComandaPagamentoRequest;
 import com.projeto.associacao.dto.comanda.ComandaResponse;
 import com.projeto.associacao.dto.comanda.ItemComandaRequest;
 import com.projeto.associacao.model.BusinessRuleException;
@@ -65,13 +67,23 @@ public class ComandaController {
 	}
 
 	@PutMapping("/{id}/fechar")
-	public ComandaResponse fechar(@PathVariable int id, @RequestBody ComandaFechamentoRequest request) throws BusinessRuleException {
-		return service.fechar(id, request);
+	public ComandaResponse fechar(@PathVariable int id, @RequestBody ComandaFechamentoRequest request, Authentication authentication) throws BusinessRuleException {
+		return service.fechar(id, request, authentication.getName());
 	}
 
 	@PutMapping("/{id}/pagamento")
-	public ComandaResponse registrarPagamento(@PathVariable int id) throws BusinessRuleException {
-		return service.registrarPagamento(id);
+	public ComandaResponse registrarPagamento(@PathVariable int id, @RequestBody(required = false) ComandaPagamentoRequest request, Authentication authentication) throws BusinessRuleException {
+		return service.registrarPagamento(id, request != null ? request.getFormaPagamento() : null, authentication.getName());
+	}
+
+	@PutMapping("/{id}/desfazer-pagamento")
+	public ComandaResponse desfazerPagamento(@PathVariable int id, Authentication authentication) throws BusinessRuleException {
+		return service.desfazerPagamento(id, authentication.getName());
+	}
+
+	@PutMapping("/{id}/desfazer-fechamento")
+	public ComandaResponse desfazerFechamento(@PathVariable int id, Authentication authentication) throws BusinessRuleException {
+		return service.desfazerFechamento(id, authentication.getName());
 	}
 
 	@PutMapping("/{id}/cancelar")
