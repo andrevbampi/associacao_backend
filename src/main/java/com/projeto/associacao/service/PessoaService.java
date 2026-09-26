@@ -1,16 +1,19 @@
 package com.projeto.associacao.service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.projeto.associacao.model.BusinessRuleException;
 import com.projeto.associacao.model.Pessoa;
 import com.projeto.associacao.repository.MembroRepository;
 import com.projeto.associacao.repository.PessoaRepository;
 import com.projeto.associacao.repository.UsuarioRepository;
+import com.projeto.associacao.util.ArquivoValidador;
 import com.projeto.associacao.util.DocumentoValidador;
 
 @Service
@@ -56,11 +59,18 @@ public class PessoaService {
             throw new BusinessRuleException("ID não informado.");
         }
 
-        if (repository.findById(pessoa.getId()) == null) {
+        Pessoa existente = repository.findById(pessoa.getId());
+        if (existente == null) {
             throw new BusinessRuleException("Pessoa de ID " + pessoa.getId() + " não cadastrada.");
         }
 
         this.validarPessoa(pessoa);
+
+        // A foto nunca vem no corpo da requisição (@JsonIgnore no getter), então
+        // salvar a pessoa recebida direto sobrescreveria a foto já gravada com null.
+        pessoa.setFoto(existente.getFoto());
+        pessoa.setFotoContentType(existente.getFotoContentType());
+        pessoa.setFotoNomeOriginal(existente.getFotoNomeOriginal());
         return repository.save(pessoa);
     }
 
@@ -82,6 +92,39 @@ public class PessoaService {
         }
 
 		repository.deleteById(id);
+    }
+
+    public void salvarFoto(int id, MultipartFile arquivo) throws BusinessRuleException {
+        Pessoa pessoa = buscarOuFalhar(id);
+        ArquivoValidador.validarImagem(arquivo.getContentType(), arquivo.getSize());
+
+        try {
+            pessoa.setFoto(arquivo.getBytes());
+        } catch (IOException ex) {
+            throw new BusinessRuleException("Não foi possível ler o arquivo enviado.");
+        }
+        pessoa.setFotoContentType(arquivo.getContentType());
+        pessoa.setFotoNomeOriginal(arquivo.getOriginalFilename());
+        repository.save(pessoa);
+    }
+
+    public void removerFoto(int id) throws BusinessRuleException {
+        Pessoa pessoa = buscarOuFalhar(id);
+        pessoa.setFoto(null);
+        pessoa.setFotoContentType(null);
+        pessoa.setFotoNomeOriginal(null);
+        repository.save(pessoa);
+    }
+
+    public Pessoa buscarOuFalhar(int id) throws BusinessRuleException {
+        if (id == 0) {
+            throw new BusinessRuleException("ID não informado.");
+        }
+        Pessoa pessoa = repository.findById(id);
+        if (pessoa == null) {
+            throw new BusinessRuleException("Pessoa de ID " + id + " não cadastrada.");
+        }
+        return pessoa;
     }
 
     private void validarPessoa (Pessoa pessoa) throws BusinessRuleException {

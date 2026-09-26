@@ -8,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
@@ -38,6 +39,16 @@ public class Produto {
 
 	@Column(name = "controlaestoque")
 	private boolean controlaEstoque = true;
+
+	@Lob
+	@Column(name = "foto")
+	private byte[] foto;
+
+	@Column(name = "fotocontenttype")
+	private String fotoContentType;
+
+	@Column(name = "fotonomeoriginal")
+	private String fotoNomeOriginal;
 
 	public int getId() {
 		return id;
@@ -92,6 +103,27 @@ public class Produto {
 	}
 	public void setControlaEstoque(boolean controlaEstoque) {
 		this.controlaEstoque = controlaEstoque;
+	}
+	public byte[] getFoto() {
+		return foto;
+	}
+	public void setFoto(byte[] foto) {
+		this.foto = foto;
+	}
+	public String getFotoContentType() {
+		return fotoContentType;
+	}
+	public void setFotoContentType(String fotoContentType) {
+		this.fotoContentType = fotoContentType;
+	}
+	public String getFotoNomeOriginal() {
+		return fotoNomeOriginal;
+	}
+	public void setFotoNomeOriginal(String fotoNomeOriginal) {
+		this.fotoNomeOriginal = fotoNomeOriginal;
+	}
+	public boolean isTemFoto() {
+		return (foto != null) && (foto.length > 0);
 	}
 
 }
