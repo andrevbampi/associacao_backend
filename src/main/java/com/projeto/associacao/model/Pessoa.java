@@ -6,6 +6,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -28,6 +30,10 @@ public class Pessoa {
     private String telefone;
     private String email;
     private String endereco;
+
+    // Só se aplica a pessoa física (tipo 1); em pessoa jurídica fica sempre null.
+    @Enumerated(EnumType.STRING)
+    private Sexo sexo;
 
     @Lob
     @Column(name = "foto")
@@ -86,6 +92,12 @@ public class Pessoa {
     }
     public void setEndereco(String endereco) {
         this.endereco = endereco;
+    }
+    public Sexo getSexo() {
+        return sexo;
+    }
+    public void setSexo(Sexo sexo) {
+        this.sexo = sexo;
     }
 
     // Nunca vai no JSON: a foto é servida por um endpoint dedicado

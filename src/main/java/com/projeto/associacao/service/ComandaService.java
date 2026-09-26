@@ -59,8 +59,8 @@ public class ComandaService {
 	@Autowired
 	private ParametroSistemaService parametroSistemaService;
 
-	public Iterable<ComandaResponse> selecionar(String status, Integer idPessoa, String nomeTemporario, LocalDate dataAbertura,
-			Boolean pago, LocalDate dataPagamento) throws BusinessRuleException {
+	public Iterable<ComandaResponse> selecionar(String status, Integer idPessoa, String nomeTemporario, LocalDate dataAberturaInicio,
+			LocalDate dataAberturaFim, Boolean pago, LocalDate dataPagamentoInicio, LocalDate dataPagamentoFim) throws BusinessRuleException {
 		Iterable<Comanda> comandas;
 		if ((status == null) || status.isBlank()) {
 			comandas = repository.findAllByOrderByDataAberturaDesc();
@@ -78,15 +78,27 @@ public class ComandaService {
 							|| !comanda.getNomeTemporario().toLowerCase().contains(nomeTemporario.trim().toLowerCase()))) {
 				continue;
 			}
-			if ((dataAbertura != null) && !dataAbertura.equals(comanda.getDataAbertura().toLocalDate())) {
+			LocalDate dataAbertura = comanda.getDataAbertura().toLocalDate();
+			if ((dataAberturaInicio != null) && dataAbertura.isBefore(dataAberturaInicio)) {
+				continue;
+			}
+			if ((dataAberturaFim != null) && dataAbertura.isAfter(dataAberturaFim)) {
 				continue;
 			}
 			if ((pago != null) && (comanda.isPago() != pago)) {
 				continue;
 			}
-			if ((dataPagamento != null)
-					&& ((comanda.getDataPagamento() == null) || !dataPagamento.equals(comanda.getDataPagamento().toLocalDate()))) {
-				continue;
+			if ((dataPagamentoInicio != null || dataPagamentoFim != null)) {
+				if (comanda.getDataPagamento() == null) {
+					continue;
+				}
+				LocalDate dataPagamento = comanda.getDataPagamento().toLocalDate();
+				if ((dataPagamentoInicio != null) && dataPagamento.isBefore(dataPagamentoInicio)) {
+					continue;
+				}
+				if ((dataPagamentoFim != null) && dataPagamento.isAfter(dataPagamentoFim)) {
+					continue;
+				}
 			}
 			responses.add(converterParaResponse(comanda, false));
 		}

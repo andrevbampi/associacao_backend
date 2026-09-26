@@ -144,6 +144,12 @@ public class PessoaService {
         // gravado é sempre só os caracteres do documento em si.
         pessoa.setDocumento(pessoa.getDocumento().replaceAll("[^0-9A-Za-z]", "").toUpperCase());
 
+        // Sexo só faz sentido para pessoa física; em jurídica é sempre null,
+        // independentemente do que vier na requisição.
+        if (pessoa.getTipo() == 2) {
+            pessoa.setSexo(null);
+        }
+
         if (pessoa.getTipo() == 1) {
             if (!DocumentoValidador.validarCpf(pessoa.getDocumento())) {
                 throw new BusinessRuleException("CPF inválido.");
