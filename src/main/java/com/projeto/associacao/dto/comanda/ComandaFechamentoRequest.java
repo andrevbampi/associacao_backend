@@ -4,6 +4,7 @@ public class ComandaFechamentoRequest {
 
 	private boolean pago;
 	private String formaPagamento;
+	private Integer idCaixa;
 
 	public boolean isPago() {
 		return pago;
@@ -16,6 +17,12 @@ public class ComandaFechamentoRequest {
 	}
 	public void setFormaPagamento(String formaPagamento) {
 		this.formaPagamento = formaPagamento;
+	}
+	public Integer getIdCaixa() {
+		return idCaixa;
+	}
+	public void setIdCaixa(Integer idCaixa) {
+		this.idCaixa = idCaixa;
 	}
 
 }

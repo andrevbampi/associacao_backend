@@ -7,6 +7,7 @@ public class LancamentoFinanceiroRequest {
 
 	private int id;
 	private int idCategoriaFinanceira;
+	private int idCaixa;
 	private String tipo;
 	private BigDecimal valor;
 	private LocalDate data;
@@ -29,6 +30,12 @@ public class LancamentoFinanceiroRequest {
 	}
 	public void setIdCategoriaFinanceira(int idCategoriaFinanceira) {
 		this.idCategoriaFinanceira = idCategoriaFinanceira;
+	}
+	public int getIdCaixa() {
+		return idCaixa;
+	}
+	public void setIdCaixa(int idCaixa) {
+		this.idCaixa = idCaixa;
 	}
 	public String getTipo() {
 		return tipo;

@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 
 import com.projeto.associacao.dto.usuario.UsuarioResponse;
 import com.projeto.associacao.model.CategoriaFinanceira;
+import com.projeto.associacao.model.Caixa;
 import com.projeto.associacao.model.FormaPagamento;
 import com.projeto.associacao.model.Membro;
 import com.projeto.associacao.model.Pessoa;
@@ -15,6 +16,7 @@ public class LancamentoFinanceiroResponse {
 
 	private int id;
 	private CategoriaFinanceira categoriaFinanceira;
+	private Caixa caixa;
 	private TipoLancamento tipo;
 	private BigDecimal valor;
 	private LocalDate data;
@@ -39,6 +41,12 @@ public class LancamentoFinanceiroResponse {
 	}
 	public void setCategoriaFinanceira(CategoriaFinanceira categoriaFinanceira) {
 		this.categoriaFinanceira = categoriaFinanceira;
+	}
+	public Caixa getCaixa() {
+		return caixa;
+	}
+	public void setCaixa(Caixa caixa) {
+		this.caixa = caixa;
 	}
 	public TipoLancamento getTipo() {
 		return tipo;

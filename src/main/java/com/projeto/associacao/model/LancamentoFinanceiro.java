@@ -27,6 +27,10 @@ public class LancamentoFinanceiro {
 	@JoinColumn(name = "idcategoriafinanceira", nullable = false)
 	private CategoriaFinanceira categoriaFinanceira;
 
+	@ManyToOne
+	@JoinColumn(name = "idcaixa", nullable = false)
+	private Caixa caixa;
+
 	@Enumerated(EnumType.STRING)
 	private TipoLancamento tipo;
 
@@ -74,6 +78,12 @@ public class LancamentoFinanceiro {
 	}
 	public void setCategoriaFinanceira(CategoriaFinanceira categoriaFinanceira) {
 		this.categoriaFinanceira = categoriaFinanceira;
+	}
+	public Caixa getCaixa() {
+		return caixa;
+	}
+	public void setCaixa(Caixa caixa) {
+		this.caixa = caixa;
 	}
 	public TipoLancamento getTipo() {
 		return tipo;

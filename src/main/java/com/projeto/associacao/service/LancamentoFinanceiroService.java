@@ -11,8 +11,10 @@ import org.springframework.stereotype.Service;
 
 import com.projeto.associacao.dto.financeiro.LancamentoFinanceiroRequest;
 import com.projeto.associacao.dto.financeiro.LancamentoFinanceiroResponse;
+import com.projeto.associacao.dto.financeiro.ResumoCaixaResponse;
 import com.projeto.associacao.dto.financeiro.ResumoFinanceiroResponse;
 import com.projeto.associacao.model.BusinessRuleException;
+import com.projeto.associacao.model.Caixa;
 import com.projeto.associacao.model.CategoriaFinanceira;
 import com.projeto.associacao.model.Comanda;
 import com.projeto.associacao.model.FormaPagamento;
@@ -22,6 +24,7 @@ import com.projeto.associacao.model.Pessoa;
 import com.projeto.associacao.model.TipoCategoriaFinanceira;
 import com.projeto.associacao.model.TipoLancamento;
 import com.projeto.associacao.model.Usuario;
+import com.projeto.associacao.repository.CaixaRepository;
 import com.projeto.associacao.repository.CategoriaFinanceiraRepository;
 import com.projeto.associacao.repository.ComandaRepository;
 import com.projeto.associacao.repository.LancamentoFinanceiroRepository;
@@ -50,6 +53,9 @@ public class LancamentoFinanceiroService {
 	private ComandaRepository comandaRepository;
 
 	@Autowired
+	private CaixaRepository caixaRepository;
+
+	@Autowired
 	private UsuarioRepository usuarioRepository;
 
 	@Autowired
@@ -59,7 +65,7 @@ public class LancamentoFinanceiroService {
 	private CategoriaFinanceiraService categoriaFinanceiraService;
 
 	public Iterable<LancamentoFinanceiroResponse> selecionar(LocalDate dataInicio, LocalDate dataFim,
-			Integer idCategoriaFinanceira, String tipo, Boolean pago) throws BusinessRuleException {
+			Integer idCategoriaFinanceira, String tipo, Boolean pago, Integer idCaixa) throws BusinessRuleException {
 		List<LancamentoFinanceiroResponse> responses = new ArrayList<>();
 		for (LancamentoFinanceiro lancamento : repository.findAllByOrderByDataDesc()) {
 			if ((dataInicio != null) && lancamento.getData().isBefore(dataInicio)) {
@@ -75,6 +81,9 @@ public class LancamentoFinanceiroService {
 				continue;
 			}
 			if ((pago != null) && (lancamento.isPago() != pago)) {
+				continue;
+			}
+			if ((idCaixa != null) && (lancamento.getCaixa().getId() != idCaixa)) {
 				continue;
 			}
 			responses.add(converterParaResponse(lancamento));
@@ -113,6 +122,25 @@ public class LancamentoFinanceiroService {
 		return resumo;
 	}
 
+	// Saldo atual (só lançamentos pagos) de cada caixa cadastrado.
+	public Iterable<ResumoCaixaResponse> resumoPorCaixa() {
+		List<ResumoCaixaResponse> resumos = new ArrayList<>();
+		for (Caixa caixa : caixaRepository.findAll()) {
+			BigDecimal saldo = BigDecimal.ZERO;
+			for (LancamentoFinanceiro lancamento : repository.findAll()) {
+				if (!lancamento.isPago() || (lancamento.getCaixa().getId() != caixa.getId())) {
+					continue;
+				}
+				saldo = saldo.add(lancamento.getTipo() == TipoLancamento.ENTRADA ? lancamento.getValor() : lancamento.getValor().negate());
+			}
+			ResumoCaixaResponse resumo = new ResumoCaixaResponse();
+			resumo.setCaixa(caixa);
+			resumo.setSaldoAtual(saldo);
+			resumos.add(resumo);
+		}
+		return resumos;
+	}
+
 	// loginUsuarioAutenticado vem do token JWT, nunca do corpo da requisição.
 	public LancamentoFinanceiroResponse cadastrar(LancamentoFinanceiroRequest request, String loginUsuarioAutenticado) throws BusinessRuleException {
 		LancamentoFinanceiro lancamento = this.validarLancamento(request, false, loginUsuarioAutenticado);
@@ -145,14 +173,20 @@ public class LancamentoFinanceiroService {
 
 	// Usado pela ComandaService ao registrar o pagamento de uma comanda: gera a
 	// receita correspondente, já paga, na categoria financeira "Venda de Produtos".
-	public void gerarReceitaComanda(Comanda comanda, BigDecimal valor, FormaPagamento formaPagamento, String loginUsuarioAutenticado) throws BusinessRuleException {
+	public void gerarReceitaComanda(Comanda comanda, BigDecimal valor, FormaPagamento formaPagamento, int idCaixa, String loginUsuarioAutenticado) throws BusinessRuleException {
 		Usuario usuario = usuarioRepository.findByLogin(loginUsuarioAutenticado);
 		if (usuario == null) {
 			throw new BusinessRuleException("Usuário autenticado não encontrado.");
 		}
 
+		Caixa caixa = caixaRepository.findById(idCaixa);
+		if (caixa == null) {
+			throw new BusinessRuleException("Não existe caixa cadastrado com o ID " + idCaixa);
+		}
+
 		LancamentoFinanceiro lancamento = new LancamentoFinanceiro();
 		lancamento.setCategoriaFinanceira(categoriaFinanceiraService.buscarOuCriarCategoriaVendaDeProdutos());
+		lancamento.setCaixa(caixa);
 		lancamento.setTipo(TipoLancamento.ENTRADA);
 		lancamento.setValor(valor);
 		lancamento.setData(LocalDate.now());
@@ -203,6 +237,15 @@ public class LancamentoFinanceiroService {
 		CategoriaFinanceira categoria = categoriaRepository.findById(request.getIdCategoriaFinanceira());
 		if (categoria == null) {
 			throw new BusinessRuleException("Não existe categoria financeira cadastrada com o ID " + request.getIdCategoriaFinanceira());
+		}
+
+		if (request.getIdCaixa() == 0) {
+			throw new BusinessRuleException("Caixa não informado.");
+		}
+
+		Caixa caixa = caixaRepository.findById(request.getIdCaixa());
+		if (caixa == null) {
+			throw new BusinessRuleException("Não existe caixa cadastrado com o ID " + request.getIdCaixa());
 		}
 
 		TipoLancamento tipo = converterTipo(request.getTipo());
@@ -270,6 +313,7 @@ public class LancamentoFinanceiroService {
 		}
 
 		lancamento.setCategoriaFinanceira(categoria);
+		lancamento.setCaixa(caixa);
 		lancamento.setTipo(tipo);
 		lancamento.setValor(request.getValor());
 		lancamento.setData(request.getData());
@@ -311,6 +355,7 @@ public class LancamentoFinanceiroService {
 		LancamentoFinanceiroResponse response = new LancamentoFinanceiroResponse();
 		response.setId(lancamento.getId());
 		response.setCategoriaFinanceira(lancamento.getCategoriaFinanceira());
+		response.setCaixa(lancamento.getCaixa());
 		response.setTipo(lancamento.getTipo());
 		response.setValor(lancamento.getValor());
 		response.setData(lancamento.getData());

@@ -17,12 +17,14 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import com.projeto.associacao.dto.comanda.ComandaAberturaRequest;
 import com.projeto.associacao.dto.comanda.ItemComandaRequest;
 import com.projeto.associacao.model.BusinessRuleException;
+import com.projeto.associacao.model.Caixa;
 import com.projeto.associacao.model.Comanda;
 import com.projeto.associacao.model.ItemComanda;
 import com.projeto.associacao.model.Membro;
 import com.projeto.associacao.model.Pessoa;
 import com.projeto.associacao.model.Produto;
 import com.projeto.associacao.model.StatusComanda;
+import com.projeto.associacao.repository.CaixaRepository;
 import com.projeto.associacao.repository.ComandaRepository;
 import com.projeto.associacao.repository.ItemComandaRepository;
 import com.projeto.associacao.repository.MembroRepository;
@@ -46,6 +48,15 @@ class ComandaServiceTest {
 
 	@Mock
 	private MembroRepository membroRepository;
+
+	@Mock
+	private CaixaRepository caixaRepository;
+
+	@Mock
+	private ParametroSistemaService parametroSistemaService;
+
+	@Mock
+	private LancamentoFinanceiroService lancamentoFinanceiroService;
 
 	@InjectMocks
 	private ComandaService service;
@@ -185,5 +196,42 @@ class ComandaServiceTest {
 
 		assertThrows(BusinessRuleException.class,
 				() -> service.fechar(1, new com.projeto.associacao.dto.comanda.ComandaFechamentoRequest(), "usuarioteste"));
+	}
+
+	@Test
+	void registrarPagamentoUsaCaixaDoParametroAutomaticamenteSemPrecisarInformar() throws BusinessRuleException {
+		Comanda comanda = new Comanda();
+		comanda.setId(1);
+		comanda.setStatus(StatusComanda.FECHADA);
+		comanda.setPago(false);
+		comanda.setValorTotal(new BigDecimal("50.00"));
+
+		Caixa caixaPrincipal = new Caixa();
+		caixaPrincipal.setId(1);
+		caixaPrincipal.setNome("Caixa Principal");
+
+		when(repository.findById(1)).thenReturn(comanda);
+		when(parametroSistemaService.buscarValorInteiro(ParametroSistemaService.CAIXA_COMANDA)).thenReturn(1);
+		when(caixaRepository.findById(1)).thenReturn(caixaPrincipal);
+		when(itemRepository.findByComanda_Id(1)).thenReturn(List.of());
+		when(repository.save(any(Comanda.class))).thenAnswer(inv -> inv.getArgument(0));
+
+		var resultado = service.registrarPagamento(1, "PIX", null, "usuarioteste");
+
+		assertEquals(true, resultado.isPago());
+	}
+
+	@Test
+	void registrarPagamentoExigeCaixaQuandoParametroNaoConfigurado() {
+		Comanda comanda = new Comanda();
+		comanda.setId(1);
+		comanda.setStatus(StatusComanda.FECHADA);
+		comanda.setPago(false);
+		comanda.setValorTotal(new BigDecimal("50.00"));
+
+		when(repository.findById(1)).thenReturn(comanda);
+		when(parametroSistemaService.buscarValorInteiro(ParametroSistemaService.CAIXA_COMANDA)).thenReturn(null);
+
+		assertThrows(BusinessRuleException.class, () -> service.registrarPagamento(1, "PIX", null, "usuarioteste"));
 	}
 }

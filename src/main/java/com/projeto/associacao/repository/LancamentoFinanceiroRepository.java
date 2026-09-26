@@ -14,4 +14,6 @@ public interface LancamentoFinanceiroRepository extends CrudRepository<Lancament
 
 	boolean existsByCategoriaFinanceira_Id(int idCategoriaFinanceira);
 
+	boolean existsByCaixa_Id(int idCaixa);
+
 }
