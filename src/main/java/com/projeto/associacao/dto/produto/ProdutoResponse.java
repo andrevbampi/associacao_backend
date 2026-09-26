@@ -12,6 +12,10 @@ public class ProdutoResponse {
 	private BigDecimal precoMembro;
 	private CategoriaProduto categoria;
 	private boolean ativo;
+	private int estoqueAtual;
+	private Integer estoqueMinimo;
+	private boolean controlaEstoque;
+	private int estoqueDisponivel;
 
 	public int getId() {
 		return id;
@@ -48,6 +52,30 @@ public class ProdutoResponse {
 	}
 	public void setAtivo(boolean ativo) {
 		this.ativo = ativo;
+	}
+	public int getEstoqueAtual() {
+		return estoqueAtual;
+	}
+	public void setEstoqueAtual(int estoqueAtual) {
+		this.estoqueAtual = estoqueAtual;
+	}
+	public Integer getEstoqueMinimo() {
+		return estoqueMinimo;
+	}
+	public void setEstoqueMinimo(Integer estoqueMinimo) {
+		this.estoqueMinimo = estoqueMinimo;
+	}
+	public boolean isControlaEstoque() {
+		return controlaEstoque;
+	}
+	public void setControlaEstoque(boolean controlaEstoque) {
+		this.controlaEstoque = controlaEstoque;
+	}
+	public int getEstoqueDisponivel() {
+		return estoqueDisponivel;
+	}
+	public void setEstoqueDisponivel(int estoqueDisponivel) {
+		this.estoqueDisponivel = estoqueDisponivel;
 	}
 
 }

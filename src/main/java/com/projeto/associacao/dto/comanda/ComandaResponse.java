@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import com.projeto.associacao.model.FormaPagamento;
 import com.projeto.associacao.model.Pessoa;
 import com.projeto.associacao.model.StatusComanda;
 
@@ -18,6 +19,7 @@ public class ComandaResponse {
 	private BigDecimal valorTotal;
 	private boolean pago;
 	private LocalDateTime dataPagamento;
+	private FormaPagamento formaPagamento;
 	private String observacao;
 
 	// Só é preenchida ao buscar uma comanda específica (GET /api/comanda/{id});
@@ -78,6 +80,12 @@ public class ComandaResponse {
 	}
 	public void setDataPagamento(LocalDateTime dataPagamento) {
 		this.dataPagamento = dataPagamento;
+	}
+	public FormaPagamento getFormaPagamento() {
+		return formaPagamento;
+	}
+	public void setFormaPagamento(FormaPagamento formaPagamento) {
+		this.formaPagamento = formaPagamento;
 	}
 	public String getObservacao() {
 		return observacao;

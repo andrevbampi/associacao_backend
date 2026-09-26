@@ -183,6 +183,7 @@ class ComandaServiceTest {
 		comanda.setStatus(StatusComanda.FECHADA);
 		when(repository.findById(1)).thenReturn(comanda);
 
-		assertThrows(BusinessRuleException.class, () -> service.fechar(1, new com.projeto.associacao.dto.comanda.ComandaFechamentoRequest()));
+		assertThrows(BusinessRuleException.class,
+				() -> service.fechar(1, new com.projeto.associacao.dto.comanda.ComandaFechamentoRequest(), "usuarioteste"));
 	}
 }

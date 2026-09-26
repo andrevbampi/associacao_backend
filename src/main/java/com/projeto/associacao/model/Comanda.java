@@ -46,6 +46,10 @@ public class Comanda {
 	@Column(name = "datapagamento")
 	private LocalDateTime dataPagamento;
 
+	@Column(name = "formapagamento")
+	@Enumerated(EnumType.STRING)
+	private FormaPagamento formaPagamento;
+
 	private String observacao;
 
 	public int getId() {
@@ -101,6 +105,12 @@ public class Comanda {
 	}
 	public void setDataPagamento(LocalDateTime dataPagamento) {
 		this.dataPagamento = dataPagamento;
+	}
+	public FormaPagamento getFormaPagamento() {
+		return formaPagamento;
+	}
+	public void setFormaPagamento(FormaPagamento formaPagamento) {
+		this.formaPagamento = formaPagamento;
 	}
 	public String getObservacao() {
 		return observacao;

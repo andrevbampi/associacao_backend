@@ -12,6 +12,7 @@ import com.projeto.associacao.dto.produto.ProdutoResponse;
 import com.projeto.associacao.model.BusinessRuleException;
 import com.projeto.associacao.model.CategoriaProduto;
 import com.projeto.associacao.model.Produto;
+import com.projeto.associacao.model.StatusComanda;
 import com.projeto.associacao.repository.CategoriaProdutoRepository;
 import com.projeto.associacao.repository.ItemComandaRepository;
 import com.projeto.associacao.repository.ProdutoRepository;
@@ -113,10 +114,20 @@ public class ProdutoService {
 		produto.setPrecoMembro(request.getPrecoMembro());
 		produto.setCategoria(categoria);
 		produto.setAtivo(request.isAtivo());
+		produto.setEstoqueMinimo(request.getEstoqueMinimo());
+		produto.setControlaEstoque(request.isControlaEstoque());
+		// O estoque atual só é definido diretamente na criação (estoque inicial).
+		// Na edição, ele só muda através de uma movimentação (EstoqueService), para
+		// manter o histórico de movimentações sempre consistente com o saldo.
+		if (!edicao) {
+			produto.setEstoqueAtual(request.getEstoqueAtual());
+		}
 		return produto;
 	}
 
-	private ProdutoResponse converterParaResponse(Produto produto) {
+	// Público porque é reaproveitado por EstoqueService e ComandaService para
+	// montar o produto de outros DTOs, sem duplicar a montagem.
+	public ProdutoResponse converterParaResponse(Produto produto) {
 		ProdutoResponse response = new ProdutoResponse();
 		response.setId(produto.getId());
 		response.setDescricao(produto.getDescricao());
@@ -124,6 +135,21 @@ public class ProdutoService {
 		response.setPrecoMembro(produto.getPrecoMembro());
 		response.setCategoria(produto.getCategoria());
 		response.setAtivo(produto.isAtivo());
+		response.setEstoqueAtual(produto.getEstoqueAtual());
+		response.setEstoqueMinimo(produto.getEstoqueMinimo());
+		response.setControlaEstoque(produto.isControlaEstoque());
+		response.setEstoqueDisponivel(calcularEstoqueDisponivel(produto));
 		return response;
+	}
+
+	private int calcularEstoqueDisponivel(Produto produto) {
+		if (!produto.isControlaEstoque()) {
+			return produto.getEstoqueAtual();
+		}
+		int reservado = 0;
+		for (var item : itemComandaRepository.findByProduto_IdAndComanda_Status(produto.getId(), StatusComanda.ABERTA)) {
+			reservado += item.getQuantidade();
+		}
+		return produto.getEstoqueAtual() - reservado;
 	}
 }

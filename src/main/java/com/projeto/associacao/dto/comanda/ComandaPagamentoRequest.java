@@ -1,16 +1,9 @@
 package com.projeto.associacao.dto.comanda;
 
-public class ComandaFechamentoRequest {
+public class ComandaPagamentoRequest {
 
-	private boolean pago;
 	private String formaPagamento;
 
-	public boolean isPago() {
-		return pago;
-	}
-	public void setPago(boolean pago) {
-		this.pago = pago;
-	}
 	public String getFormaPagamento() {
 		return formaPagamento;
 	}

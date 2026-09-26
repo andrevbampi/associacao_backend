@@ -30,6 +30,15 @@ public class Produto {
 	@JoinColumn(name = "idcategoria", nullable = false)
 	private CategoriaProduto categoria;
 
+	@Column(name = "estoqueatual")
+	private int estoqueAtual;
+
+	@Column(name = "estoqueminimo")
+	private Integer estoqueMinimo;
+
+	@Column(name = "controlaestoque")
+	private boolean controlaEstoque = true;
+
 	public int getId() {
 		return id;
 	}
@@ -65,6 +74,24 @@ public class Produto {
 	}
 	public void setCategoria(CategoriaProduto categoria) {
 		this.categoria = categoria;
+	}
+	public int getEstoqueAtual() {
+		return estoqueAtual;
+	}
+	public void setEstoqueAtual(int estoqueAtual) {
+		this.estoqueAtual = estoqueAtual;
+	}
+	public Integer getEstoqueMinimo() {
+		return estoqueMinimo;
+	}
+	public void setEstoqueMinimo(Integer estoqueMinimo) {
+		this.estoqueMinimo = estoqueMinimo;
+	}
+	public boolean isControlaEstoque() {
+		return controlaEstoque;
+	}
+	public void setControlaEstoque(boolean controlaEstoque) {
+		this.controlaEstoque = controlaEstoque;
 	}
 
 }
