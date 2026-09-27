@@ -15,6 +15,7 @@ public class MovimentoEstoqueRequest {
 	private boolean gerarLancamentoFinanceiro;
 	private int idCategoriaFinanceira;
 	private BigDecimal valorLancamento;
+	private int idCaixa;
 
 	public int getIdProduto() {
 		return idProduto;
@@ -63,6 +64,12 @@ public class MovimentoEstoqueRequest {
 	}
 	public void setValorLancamento(BigDecimal valorLancamento) {
 		this.valorLancamento = valorLancamento;
+	}
+	public int getIdCaixa() {
+		return idCaixa;
+	}
+	public void setIdCaixa(int idCaixa) {
+		this.idCaixa = idCaixa;
 	}
 
 }
