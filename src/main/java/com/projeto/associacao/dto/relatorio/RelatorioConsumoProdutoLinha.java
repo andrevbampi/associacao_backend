@@ -6,6 +6,7 @@ public class RelatorioConsumoProdutoLinha {
 
 	// Nulos quando o agrupamento correspondente não foi selecionado.
 	private String mes;
+	private String dia;
 	private String pessoa;
 
 	private int idProduto;
@@ -22,6 +23,12 @@ public class RelatorioConsumoProdutoLinha {
 	}
 	public void setMes(String mes) {
 		this.mes = mes;
+	}
+	public String getDia() {
+		return dia;
+	}
+	public void setDia(String dia) {
+		this.dia = dia;
 	}
 	public String getPessoa() {
 		return pessoa;

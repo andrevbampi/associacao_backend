@@ -119,6 +119,7 @@ public class EstoqueService {
 			}
 			LancamentoFinanceiroRequest lancamento = new LancamentoFinanceiroRequest();
 			lancamento.setIdCategoriaFinanceira(request.getIdCategoriaFinanceira());
+			lancamento.setIdCaixa(request.getIdCaixa());
 			lancamento.setTipo("SAIDA");
 			lancamento.setValor(request.getValorLancamento());
 			lancamento.setData(LocalDate.now());

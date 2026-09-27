@@ -30,13 +30,14 @@ import com.projeto.associacao.repository.ItemComandaRepository;
 public class RelatorioConsumoProdutoService {
 
 	private static final DateTimeFormatter FORMATO_MES = DateTimeFormatter.ofPattern("yyyy-MM");
+	private static final DateTimeFormatter FORMATO_DIA = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	@Autowired
 	private ItemComandaRepository itemComandaRepository;
 
 	public RelatorioConsumoProdutoResponse gerarConsumoProdutos(Boolean apenasPessoasCadastradas, Integer idPessoa,
 			String nomeTemporario, LocalDate dataAberturaInicio, LocalDate dataAberturaFim, Integer idProduto,
-			Integer idCategoriaProduto, String status, boolean agruparPorMes, boolean agruparPorPessoa,
+			Integer idCategoriaProduto, String status, boolean agruparPorMes, boolean agruparPorDia, boolean agruparPorPessoa,
 			boolean agruparPorStatus) throws BusinessRuleException {
 
 		StatusComanda statusFiltro = converterStatusFiltro(status);
@@ -87,6 +88,7 @@ public class RelatorioConsumoProdutoService {
 			}
 
 			String mes = agruparPorMes ? dataAbertura.format(FORMATO_MES) : null;
+			String dia = agruparPorDia ? dataAbertura.format(FORMATO_DIA) : null;
 
 			String pessoaLabel = null;
 			String chavePessoa = "";
@@ -102,12 +104,13 @@ public class RelatorioConsumoProdutoService {
 
 			String statusLinha = agruparPorStatus ? comanda.getStatus().name() : null;
 
-			String chave = mes + "|" + chavePessoa + "|" + produto.getId() + "|" + statusLinha;
+			String chave = mes + "|" + chavePessoa + "|" + dia + "|" + produto.getId() + "|" + statusLinha;
 
 			RelatorioConsumoProdutoLinha linha = agregados.get(chave);
 			if (linha == null) {
 				linha = new RelatorioConsumoProdutoLinha();
 				linha.setMes(mes);
+				linha.setDia(dia);
 				linha.setPessoa(pessoaLabel);
 				linha.setIdProduto(produto.getId());
 				linha.setProduto(produto.getDescricao());
@@ -122,10 +125,11 @@ public class RelatorioConsumoProdutoService {
 		}
 
 		List<RelatorioConsumoProdutoLinha> linhas = new ArrayList<>(agregados.values());
-		// Prioridade de ordenação: mês > pessoa > produto > status.
+		// Prioridade de ordenação: mês > pessoa > dia > produto > status.
 		linhas.sort(Comparator
 				.comparing((RelatorioConsumoProdutoLinha l) -> l.getMes() == null ? "" : l.getMes())
 				.thenComparing(l -> l.getPessoa() == null ? "" : l.getPessoa(), String.CASE_INSENSITIVE_ORDER)
+				.thenComparing(l -> l.getDia() == null ? "" : l.getDia())
 				.thenComparing(RelatorioConsumoProdutoLinha::getProduto, String.CASE_INSENSITIVE_ORDER)
 				.thenComparing(l -> l.getStatus() == null ? "" : l.getStatus()));
 

@@ -302,14 +302,18 @@ public class LancamentoFinanceiroService {
 			lancamento.setMembro(null);
 		}
 
+		// Só altera o vínculo com a comanda se a requisição realmente o informar.
+		// A tela de edição de lançamento não tem campo de comanda (só lançamentos
+		// automáticos de pagamento de comanda têm esse vínculo), então idComanda
+		// nunca vem preenchido nela — se tratássemos "ausente" como "limpar", toda
+		// edição de um lançamento automático (ex.: só corrigir a observação)
+		// quebraria silenciosamente seu rastro até a comanda de origem.
 		if (request.getIdComanda() != null) {
 			Comanda comanda = comandaRepository.findById(request.getIdComanda().intValue());
 			if (comanda == null) {
 				throw new BusinessRuleException("Não existe comanda cadastrada com o ID " + request.getIdComanda());
 			}
 			lancamento.setComanda(comanda);
-		} else {
-			lancamento.setComanda(null);
 		}
 
 		lancamento.setCategoriaFinanceira(categoria);
