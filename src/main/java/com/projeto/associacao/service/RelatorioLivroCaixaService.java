@@ -12,6 +12,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.projeto.associacao.dto.relatorio.RelatorioLivroCaixaAcumulado;
 import com.projeto.associacao.dto.relatorio.RelatorioLivroCaixaLinha;
 import com.projeto.associacao.dto.relatorio.RelatorioLivroCaixaResponse;
 import com.projeto.associacao.model.LancamentoFinanceiro;
@@ -133,7 +134,60 @@ public class RelatorioLivroCaixaService {
 		response.setTotalSaidasGeral(totalSaidas);
 		response.setSaldoGeral(totalEntradas.subtract(totalSaidas));
 
+		// Acumulado: mesmos filtros (só o caixa), mas ignora a data de início e vai
+		// do começo de tudo até a data fim (ou até hoje, se não houver data fim).
+		LocalDate dataAcumuladoAte = (dataFim != null) ? dataFim : LocalDate.now();
+		response.setDataAcumuladoAte(dataAcumuladoAte);
+		calcularAcumulado(response, idCaixa, dataAcumuladoAte, agruparPorCaixa);
+
 		return response;
+	}
+
+	private void calcularAcumulado(RelatorioLivroCaixaResponse response, Integer idCaixa, LocalDate ate, boolean agruparPorCaixa) {
+		RelatorioLivroCaixaAcumulado geral = novoAcumulado(null);
+		Map<String, RelatorioLivroCaixaAcumulado> porCaixa = new LinkedHashMap<>();
+
+		for (LancamentoFinanceiro lancamento : repository.findAll()) {
+			if (!lancamento.isPago()) {
+				continue;
+			}
+			if ((idCaixa != null) && (lancamento.getCaixa().getId() != idCaixa)) {
+				continue;
+			}
+			if (lancamento.getData().isAfter(ate)) {
+				continue;
+			}
+
+			somarAcumulado(geral, lancamento);
+			if (agruparPorCaixa) {
+				porCaixa.computeIfAbsent(lancamento.getCaixa().getNome(), this::novoAcumulado);
+				somarAcumulado(porCaixa.get(lancamento.getCaixa().getNome()), lancamento);
+			}
+		}
+
+		response.setAcumuladoGeral(geral);
+		List<RelatorioLivroCaixaAcumulado> lista = new ArrayList<>(porCaixa.values());
+		lista.sort(Comparator.comparing(RelatorioLivroCaixaAcumulado::getCaixa, String.CASE_INSENSITIVE_ORDER));
+		response.setAcumuladosPorCaixa(lista);
+	}
+
+	private RelatorioLivroCaixaAcumulado novoAcumulado(String caixa) {
+		RelatorioLivroCaixaAcumulado acumulado = new RelatorioLivroCaixaAcumulado();
+		acumulado.setCaixa(caixa);
+		acumulado.setTotalEntradas(BigDecimal.ZERO);
+		acumulado.setTotalSaidas(BigDecimal.ZERO);
+		acumulado.setSaldo(BigDecimal.ZERO);
+		return acumulado;
+	}
+
+	private void somarAcumulado(RelatorioLivroCaixaAcumulado acumulado, LancamentoFinanceiro lancamento) {
+		if (lancamento.getTipo() == TipoLancamento.ENTRADA) {
+			acumulado.setTotalEntradas(acumulado.getTotalEntradas().add(lancamento.getValor()));
+			acumulado.setSaldo(acumulado.getSaldo().add(lancamento.getValor()));
+		} else {
+			acumulado.setTotalSaidas(acumulado.getTotalSaidas().add(lancamento.getValor()));
+			acumulado.setSaldo(acumulado.getSaldo().subtract(lancamento.getValor()));
+		}
 	}
 
 	private void somarValor(RelatorioLivroCaixaLinha linha, LancamentoFinanceiro lancamento) {
