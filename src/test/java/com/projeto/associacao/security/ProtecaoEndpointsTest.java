@@ -27,7 +27,7 @@ class ProtecaoEndpointsTest {
 
 	// Endpoints que de propósito exigem apenas estar autenticado (ou são públicos).
 	private static final Set<String> EXCECOES = Set.of(
-			"AuthController.login", "AuthController.me",
+			"AuthController.login", "AuthController.me", "AuthController.alterarSenha",
 			"PublicController.config", "PublicController.logo",
 			"PessoaController.buscarFoto", "ProdutoController.buscarFoto");
 

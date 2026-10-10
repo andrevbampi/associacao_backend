@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
@@ -13,7 +15,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import com.projeto.associacao.dto.auth.AlterarSenhaRequest;
 import com.projeto.associacao.dto.auth.LoginRequest;
+import com.projeto.associacao.model.BusinessRuleException;
 import com.projeto.associacao.dto.usuario.UsuarioResponse;
 import com.projeto.associacao.model.CredenciaisInvalidasException;
 import com.projeto.associacao.model.Pessoa;
@@ -127,5 +131,47 @@ class AuthServiceTest {
 	void buscarUsuarioLogadoRejeitaLoginInexistente() {
 		when(repository.findByLogin(eq("fulano"))).thenReturn(null);
 		assertThrows(CredenciaisInvalidasException.class, () -> service.buscarUsuarioLogado("fulano"));
+	}
+
+	private AlterarSenhaRequest requestSenha(String atual, String nova) {
+		AlterarSenhaRequest request = new AlterarSenhaRequest();
+		request.setSenhaAtual(atual);
+		request.setNovaSenha(nova);
+		return request;
+	}
+
+	@Test
+	void alterarSenhaRejeitaSenhaAtualIncorreta() {
+		Usuario usuario = usuarioAtivo();
+		when(repository.findByLogin("fulano")).thenReturn(usuario);
+		when(passwordEncoder.matches("errada", "hash")).thenReturn(false);
+
+		assertThrows(BusinessRuleException.class, () -> service.alterarSenha("fulano", requestSenha("errada", "novasenha")));
+		verify(repository, never()).save(any());
+	}
+
+	@Test
+	void alterarSenhaRejeitaNovaSenhaCurtaOuIgualAAtual() {
+		assertThrows(BusinessRuleException.class, () -> service.alterarSenha("fulano", requestSenha("antiga1", "123")));
+		assertThrows(BusinessRuleException.class, () -> service.alterarSenha("fulano", requestSenha("antiga1", " ")));
+
+		Usuario usuario = usuarioAtivo();
+		when(repository.findByLogin("fulano")).thenReturn(usuario);
+		when(passwordEncoder.matches("mesma123", "hash")).thenReturn(true);
+		assertThrows(BusinessRuleException.class, () -> service.alterarSenha("fulano", requestSenha("mesma123", "mesma123")));
+		verify(repository, never()).save(any());
+	}
+
+	@Test
+	void alterarSenhaGravaNovoHash() throws Exception {
+		Usuario usuario = usuarioAtivo();
+		when(repository.findByLogin("fulano")).thenReturn(usuario);
+		when(passwordEncoder.matches("antiga1", "hash")).thenReturn(true);
+		when(passwordEncoder.encode("novasenha")).thenReturn("hash-novo");
+
+		service.alterarSenha("fulano", requestSenha("antiga1", "novasenha"));
+
+		assertEquals("hash-novo", usuario.getSenha());
+		verify(repository).save(usuario);
 	}
 }
