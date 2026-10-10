@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -17,11 +18,14 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 /**
  * Configuração central de segurança da API:
  * - autenticação via JWT (sem sessão HTTP, sem cookies);
+ * - a autorização por permissão é feita nos controllers com @PreAuthorize
+ *   (ver Permissoes e PermissaoService);
  * - libera apenas o login (e o preflight de CORS); todo o resto exige token;
  * - mantém a mesma política de CORS que existia antes (front em localhost:4200).
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
 	private final JwtAuthenticationFilter jwtAuthenticationFilter;

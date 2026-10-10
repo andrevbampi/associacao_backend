@@ -1,5 +1,7 @@
 package com.projeto.associacao.service;
 
+import java.util.ArrayList;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,6 +29,9 @@ public class AuthService {
 	@Autowired
 	private UsuarioService usuarioService;
 
+	@Autowired
+	private PermissaoService permissaoService;
+
 	public LoginResponse login(LoginRequest request) {
 		if ((request.getLogin() == null) || request.getLogin().isBlank()
 				|| (request.getSenha() == null) || request.getSenha().isBlank()) {
@@ -44,7 +49,7 @@ public class AuthService {
 
 		LoginResponse response = new LoginResponse();
 		response.setToken(jwtService.gerarToken(usuario));
-		response.setUsuario(usuarioService.converterParaResponse(usuario));
+		response.setUsuario(converterComPermissoes(usuario));
 		return response;
 	}
 
@@ -53,7 +58,14 @@ public class AuthService {
 		if (usuario == null) {
 			throw new CredenciaisInvalidasException("Usuário não encontrado.");
 		}
-		return usuarioService.converterParaResponse(usuario);
+		return converterComPermissoes(usuario);
+	}
+
+	/** Só a sessão (login e /me) carrega as permissões; as listagens de usuários não. */
+	private UsuarioResponse converterComPermissoes(Usuario usuario) {
+		UsuarioResponse response = usuarioService.converterParaResponse(usuario);
+		response.setPermissoes(new ArrayList<>(permissaoService.permissoesEfetivas(usuario.getId())));
+		return response;
 	}
 
 }

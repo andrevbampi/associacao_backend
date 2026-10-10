@@ -1,6 +1,7 @@
 package com.projeto.associacao.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.projeto.associacao.model.BusinessRuleException;
 import com.projeto.associacao.model.Caixa;
 import com.projeto.associacao.service.CaixaService;
+import com.projeto.associacao.security.Permissoes;
 
 @RestController
 @RequestMapping("/api/caixa")
@@ -22,21 +24,25 @@ public class CaixaController {
 	private CaixaService service;
 
 	@GetMapping("/")
+	@PreAuthorize(Permissoes.LOOKUP_CAIXA)
 	public Iterable<Caixa> selecionar() {
 		return service.selecionar();
 	}
 
 	@PostMapping("/")
+	@PreAuthorize("hasAuthority('" + Permissoes.CAIXA_CRIAR + "')")
 	public Caixa cadastrar(@RequestBody Caixa caixa) throws BusinessRuleException {
 		return service.cadastrar(caixa);
 	}
 
 	@PutMapping("/")
+	@PreAuthorize("hasAuthority('" + Permissoes.CAIXA_EDITAR + "')")
 	public Caixa alterar(@RequestBody Caixa caixa) throws BusinessRuleException {
 		return service.alterar(caixa);
 	}
 
 	@DeleteMapping("/{id}")
+	@PreAuthorize("hasAuthority('" + Permissoes.CAIXA_EXCLUIR + "')")
 	public void remover(@PathVariable int id) throws BusinessRuleException {
 		service.remover(id);
 	}

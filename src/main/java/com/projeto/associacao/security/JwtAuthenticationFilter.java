@@ -1,16 +1,21 @@
 package com.projeto.associacao.security;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.NonNull;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.projeto.associacao.service.PermissaoService;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -33,6 +38,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	@Autowired
 	private JwtService jwtService;
 
+	@Autowired
+	private PermissaoService permissaoService;
+
 	@Override
 	protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
 			@NonNull FilterChain filterChain) throws ServletException, IOException {
@@ -42,10 +50,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		if ((token != null) && jwtService.tokenValido(token) && (SecurityContextHolder.getContext().getAuthentication() == null)) {
 			String login = jwtService.extrairLogin(token);
 
-			var authorities = List.of(new SimpleGrantedAuthority("ROLE_USER"));
-			var authentication = new UsernamePasswordAuthenticationToken(login, null, authorities);
-			authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-			SecurityContextHolder.getContext().setAuthentication(authentication);
+			// As permissões vêm do banco (com cache curto), não do token: assim uma
+			// mudança de grupo/permissão vale quase na hora e um usuário inativado
+			// ou excluído deixa de ser autenticado mesmo com token ainda válido.
+			Set<String> permissoes = permissaoService.permissoesDoLogin(login);
+			if (permissoes != null) {
+				List<GrantedAuthority> authorities = new ArrayList<>();
+				authorities.add(new SimpleGrantedAuthority("ROLE_USER"));
+				permissoes.forEach(codigo -> authorities.add(new SimpleGrantedAuthority(codigo)));
+				var authentication = new UsernamePasswordAuthenticationToken(login, null, authorities);
+				authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+				SecurityContextHolder.getContext().setAuthentication(authentication);
+			}
 		}
 
 		filterChain.doFilter(request, response);

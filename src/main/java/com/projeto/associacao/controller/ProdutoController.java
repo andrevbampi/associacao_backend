@@ -1,6 +1,7 @@
 package com.projeto.associacao.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -19,6 +20,7 @@ import com.projeto.associacao.dto.produto.ProdutoResponse;
 import com.projeto.associacao.model.BusinessRuleException;
 import com.projeto.associacao.model.Produto;
 import com.projeto.associacao.service.ProdutoService;
+import com.projeto.associacao.security.Permissoes;
 
 @RestController
 @RequestMapping("/api/produto")
@@ -28,6 +30,7 @@ public class ProdutoController {
 	private ProdutoService service;
 
 	@GetMapping("/")
+	@PreAuthorize(Permissoes.LOOKUP_PRODUTO)
 	public Iterable<ProdutoResponse> selecionar(
 			@RequestParam(required = false) String descricao,
 			@RequestParam(required = false) Integer idCategoria,
@@ -36,16 +39,19 @@ public class ProdutoController {
 	}
 
 	@PostMapping("/")
+	@PreAuthorize("hasAuthority('" + Permissoes.PRODUTO_CRIAR + "')")
 	public ProdutoResponse cadastrar(@RequestBody ProdutoRequest request) throws BusinessRuleException {
 		return service.cadastrar(request);
 	}
 
 	@PutMapping("/")
+	@PreAuthorize("hasAuthority('" + Permissoes.PRODUTO_EDITAR + "')")
 	public ProdutoResponse alterar(@RequestBody ProdutoRequest request) throws BusinessRuleException {
 		return service.alterar(request);
 	}
 
 	@DeleteMapping("/{id}")
+	@PreAuthorize("hasAuthority('" + Permissoes.PRODUTO_EXCLUIR + "')")
 	public void remover(@PathVariable int id) throws BusinessRuleException {
 		service.remover(id);
 	}
@@ -62,11 +68,13 @@ public class ProdutoController {
 	}
 
 	@PutMapping("/{id}/foto")
+	@PreAuthorize("hasAuthority('" + Permissoes.PRODUTO_FOTO + "')")
 	public void salvarFoto(@PathVariable int id, @RequestParam("arquivo") MultipartFile arquivo) throws BusinessRuleException {
 		service.salvarFoto(id, arquivo);
 	}
 
 	@DeleteMapping("/{id}/foto")
+	@PreAuthorize("hasAuthority('" + Permissoes.PRODUTO_FOTO + "')")
 	public void removerFoto(@PathVariable int id) throws BusinessRuleException {
 		service.removerFoto(id);
 	}

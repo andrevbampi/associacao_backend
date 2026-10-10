@@ -34,6 +34,12 @@ class UsuarioServiceTest {
 	@Mock
 	private PasswordEncoder passwordEncoder;
 
+	@Mock
+	private PermissaoService permissaoService;
+
+	@Mock
+	private UsuarioAcessoService usuarioAcessoService;
+
 	@InjectMocks
 	private UsuarioService service;
 

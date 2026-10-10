@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.projeto.associacao.dto.usuario.UsuarioRequest;
 import com.projeto.associacao.dto.usuario.UsuarioResponse;
@@ -26,6 +27,12 @@ public class UsuarioService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+	@Autowired
+	private PermissaoService permissaoService;
+
+	@Autowired
+	private UsuarioAcessoService usuarioAcessoService;
 
 	public Iterable<UsuarioResponse> selecionar(String nomePessoa, Boolean ativo) {
 		List<UsuarioResponse> responses = new ArrayList<>();
@@ -49,9 +56,16 @@ public class UsuarioService {
 	
 	public UsuarioResponse alterar(UsuarioRequest request) throws BusinessRuleException {
 		Usuario usuario = this.validarUsuario(request, true);
-		return converterParaResponse(repository.save(usuario));
+		if (!usuario.isAtivo() && permissaoService.ehAdministradorAtivo(usuario.getId())
+				&& (permissaoService.contarAdministradoresAtivos(usuario.getId(), null) == 0)) {
+			throw new BusinessRuleException("Não é possível inativar este usuário: o sistema ficaria sem nenhum administrador ativo.");
+		}
+		UsuarioResponse response = converterParaResponse(repository.save(usuario));
+		permissaoService.limparCache();
+		return response;
 	}
 	
+	@Transactional
 	public void remover(int id) throws BusinessRuleException {
 		if (id == 0) {
 			throw new BusinessRuleException("ID não informado.");
@@ -61,7 +75,13 @@ public class UsuarioService {
 			throw new BusinessRuleException("Usuário de ID " + id + " não cadastrado.");
 		}
 
+		if (permissaoService.ehAdministradorAtivo(id) && (permissaoService.contarAdministradoresAtivos(id, null) == 0)) {
+			throw new BusinessRuleException("Não é possível excluir este usuário: o sistema ficaria sem nenhum administrador ativo.");
+		}
+
+		usuarioAcessoService.removerVinculos(id);
 		repository.deleteById(id);
+		permissaoService.limparCache();
 	}
 	
 	private Usuario validarUsuario(UsuarioRequest request, boolean edicao) throws BusinessRuleException {
