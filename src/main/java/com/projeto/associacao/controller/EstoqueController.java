@@ -3,6 +3,7 @@ package com.projeto.associacao.controller;
 import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,6 +17,7 @@ import com.projeto.associacao.dto.estoque.MovimentoEstoqueRequest;
 import com.projeto.associacao.dto.estoque.MovimentoEstoqueResponse;
 import com.projeto.associacao.model.BusinessRuleException;
 import com.projeto.associacao.service.EstoqueService;
+import com.projeto.associacao.security.Permissoes;
 
 @RestController
 @RequestMapping("/api/estoque")
@@ -25,6 +27,7 @@ public class EstoqueController {
 	private EstoqueService service;
 
 	@GetMapping("/movimentos")
+	@PreAuthorize("hasAuthority('" + Permissoes.ESTOQUE_VISUALIZAR + "')")
 	public Iterable<MovimentoEstoqueResponse> selecionar(
 			@RequestParam(required = false) Integer idProduto,
 			@RequestParam(required = false) String tipo,
@@ -35,6 +38,7 @@ public class EstoqueController {
 	}
 
 	@PostMapping("/movimentos")
+	@PreAuthorize("hasAuthority('" + Permissoes.ESTOQUE_MOVIMENTAR + "')")
 	public MovimentoEstoqueResponse lancar(@RequestBody MovimentoEstoqueRequest request, Authentication authentication) throws BusinessRuleException {
 		return service.lancar(request, authentication.getName());
 	}

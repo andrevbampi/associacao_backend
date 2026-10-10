@@ -1,6 +1,7 @@
 package com.projeto.associacao.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +16,7 @@ import com.projeto.associacao.dto.membro.MembroRequest;
 import com.projeto.associacao.dto.membro.MembroResponse;
 import com.projeto.associacao.model.BusinessRuleException;
 import com.projeto.associacao.service.MembroService;
+import com.projeto.associacao.security.Permissoes;
 
 @RestController
 @RequestMapping("/api/membro")
@@ -24,6 +26,7 @@ public class MembroController {
 	private MembroService service;
 
 	@GetMapping("/")
+	@PreAuthorize("hasAuthority('" + Permissoes.MEMBRO_VISUALIZAR + "')")
 	public Iterable<MembroResponse> selecionar(
 			@RequestParam(required = false) String nomePessoa,
 			@RequestParam(required = false) Integer idStatus,
@@ -32,16 +35,19 @@ public class MembroController {
 	}
 	
 	@PostMapping("/")
+	@PreAuthorize("hasAuthority('" + Permissoes.MEMBRO_CRIAR + "')")
 	public MembroResponse cadastrar(@RequestBody MembroRequest request) throws BusinessRuleException {
 		return service.cadastrar(request);
 	}
 	
 	@PutMapping("/")
+	@PreAuthorize("hasAuthority('" + Permissoes.MEMBRO_EDITAR + "')")
 	public MembroResponse alterar(@RequestBody MembroRequest request) throws BusinessRuleException {
 		return service.alterar(request);
 	}
 	
 	@DeleteMapping("/{id}")
+	@PreAuthorize("hasAuthority('" + Permissoes.MEMBRO_EXCLUIR + "')")
 	public void remover(@PathVariable int id) throws BusinessRuleException {
 		service.remover(id);
 	}

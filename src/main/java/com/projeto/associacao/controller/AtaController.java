@@ -1,6 +1,7 @@
 package com.projeto.associacao.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,7 @@ import com.projeto.associacao.dto.documentoAta.DocumentoAtaResponse;
 import com.projeto.associacao.model.BusinessRuleException;
 import com.projeto.associacao.service.AtaService;
 import com.projeto.associacao.service.DocumentoAtaService;
+import com.projeto.associacao.security.Permissoes;
 
 @RestController
 @RequestMapping("/api/ata")
@@ -31,31 +33,37 @@ public class AtaController {
 	private DocumentoAtaService documentoService;
 
 	@GetMapping("/")
+	@PreAuthorize("hasAuthority('" + Permissoes.ATA_VISUALIZAR + "')")
 	public Iterable<AtaResponse> selecionar() {
 		return service.selecionar();
 	}
 
 	@PostMapping("/")
+	@PreAuthorize("hasAuthority('" + Permissoes.ATA_CRIAR + "')")
 	public AtaResponse cadastrar(@RequestBody AtaRequest request, Authentication authentication) throws BusinessRuleException {
 		return service.cadastrar(request, authentication.getName());
 	}
 
 	@PutMapping("/")
+	@PreAuthorize("hasAuthority('" + Permissoes.ATA_EDITAR + "')")
 	public AtaResponse alterar(@RequestBody AtaRequest request, Authentication authentication) throws BusinessRuleException {
 		return service.alterar(request, authentication.getName());
 	}
 
 	@DeleteMapping("/{id}")
+	@PreAuthorize("hasAuthority('" + Permissoes.ATA_EXCLUIR + "')")
 	public void remover(@PathVariable int id) throws BusinessRuleException {
 		service.remover(id);
 	}
 
 	@GetMapping("/{id}/documentos")
+	@PreAuthorize("hasAuthority('" + Permissoes.ATA_DOCUMENTO_VISUALIZAR + "')")
 	public Iterable<DocumentoAtaResponse> listarDocumentos(@PathVariable int id) throws BusinessRuleException {
 		return documentoService.listar(id);
 	}
 
 	@PostMapping("/{id}/documentos")
+	@PreAuthorize("hasAuthority('" + Permissoes.ATA_DOCUMENTO_GERENCIAR + "')")
 	public DocumentoAtaResponse uploadDocumento(@PathVariable int id, @RequestParam("arquivo") MultipartFile arquivo, Authentication authentication) throws BusinessRuleException {
 		return documentoService.upload(id, arquivo, authentication.getName());
 	}

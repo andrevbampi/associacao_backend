@@ -26,6 +26,16 @@ Observações do ambiente local (Windows):
 - `AuthController`/`AuthService`: `POST /api/auth/login` (valida com `passwordEncoder.matches`, devolve token + `UsuarioResponse`) e `GET /api/auth/me` (usado pelo front para restaurar sessão).
 - Em qualquer service que precise saber "quem está fazendo a ação" (ex.: `HistoricoMembroService`), o controller pega o login via `Authentication.getName()` (injetado pelo Spring Security a partir do JWT) e passa para o service — nunca confie em um campo tipo `idUsuarioRegistro` vindo do corpo da requisição.
 
+## Controle de acesso (grupos e permissões)
+- Permissão = código `modulo:acao` (ex.: `comanda:fechar`). O catálogo fixo está em `security/Permissoes` (constantes + lista `CATALOGO`); na subida o `AcessoInicializador` sincroniza a tabela `permissao` e, se não houver nenhum grupo, cria os grupos padrão (Administrador, Diretoria, Financeiro, Operador de bar/comanda, Estoquista, Secretaria, Consulta) e põe todos os usuários existentes em "Administrador". As tabelas precisam existir antes (`db/migracao-controle-acesso.sql`, já refletido no `schema.sql`).
+- Modelo: `grupo` (flag `administrador`), `grupo_permissao`, `usuario_grupo` (N grupos por usuário), `usuario_permissao` (exceção por usuário, efeito `PERMITIR`/`NEGAR`), `auditoria_acesso`.
+- Regra (`PermissaoService.calcular`): efetivas = (união das permissões dos grupos ativos — ou TODO o catálogo se algum for administrador — + exceções PERMITIR) − exceções NEGAR. **A negação do usuário sempre vence**, inclusive sobre administradores. Sem grupo e sem exceção: nada.
+- O `JwtAuthenticationFilter` carrega as permissões do banco (cache de 30 s, limpo a cada alteração de grupo/acesso/usuário) como `GrantedAuthority`; usuário inativo/excluído não é autenticado mesmo com token válido. As permissões **não** vão no JWT; login e `/auth/me` devolvem `usuario.permissoes` para o front.
+- Todo endpoint novo precisa de `@PreAuthorize` (`@EnableMethodSecurity`), usando as constantes de `Permissoes`; sem permissão → HTTP 403 em texto puro. Para listagens que alimentam seletores de outras telas use as expressões `Permissoes.LOOKUP_*` (aceitam a permissão do próprio módulo ou a de quem consome a lista). `ProtecaoEndpointsTest` falha se um endpoint ficar sem `@PreAuthorize` (fora a lista de exceções: login, `/me`, `/public/**`, fotos) ou se citar um código que não existe no catálogo.
+- Funcionalidade nova: adicionar a constante + item no `CATALOGO`, proteger o endpoint e conceder aos grupos (o Administrador recebe tudo sozinho).
+- Salvaguardas: nunca remover/inativar/excluir o último administrador ativo; ninguém altera o próprio acesso; grupo com usuários não pode ser excluído. Alterações de grupo e de acesso de usuário geram registro em `auditoria_acesso` (`GET /api/auditoria-acesso/`).
+- Endpoints: `/api/grupo/` (CRUD + `/permissoes` com o catálogo), `/api/usuario/{id}/acesso` (GET/PUT grupos + exceções), `/api/auditoria-acesso/`.
+
 ## Arquitetura
 Pacote base `com.projeto.associacao`, em camadas: `controller` → `service` → `repository` (`CrudRepository`) → `model` (entidades JPA).
 

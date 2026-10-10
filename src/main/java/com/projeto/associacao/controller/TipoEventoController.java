@@ -1,6 +1,7 @@
 package com.projeto.associacao.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.projeto.associacao.model.BusinessRuleException;
 import com.projeto.associacao.model.TipoEvento;
 import com.projeto.associacao.service.TipoEventoService;
+import com.projeto.associacao.security.Permissoes;
 
 @RestController
 @RequestMapping("/api/tipo-evento")
@@ -22,21 +24,25 @@ public class TipoEventoController {
 	private TipoEventoService service;
 
 	@GetMapping("/")
+	@PreAuthorize(Permissoes.LOOKUP_TIPO_EVENTO)
 	public Iterable<TipoEvento> selecionar() {
 		return service.selecionar();
 	}
 
 	@PostMapping("/")
+	@PreAuthorize("hasAuthority('" + Permissoes.TIPO_EVENTO_CRIAR + "')")
 	public TipoEvento cadastrar(@RequestBody TipoEvento tipoEvento) throws BusinessRuleException {
 		return service.cadastrar(tipoEvento);
 	}
 
 	@PutMapping("/")
+	@PreAuthorize("hasAuthority('" + Permissoes.TIPO_EVENTO_EDITAR + "')")
 	public TipoEvento alterar(@RequestBody TipoEvento tipoEvento) throws BusinessRuleException {
 		return service.alterar(tipoEvento);
 	}
 
 	@DeleteMapping("/{id}")
+	@PreAuthorize("hasAuthority('" + Permissoes.TIPO_EVENTO_EXCLUIR + "')")
 	public void remover(@PathVariable int id) throws BusinessRuleException {
 		service.remover(id);
 	}

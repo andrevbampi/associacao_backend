@@ -1,6 +1,7 @@
 package com.projeto.associacao.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.projeto.associacao.model.BusinessRuleException;
 import com.projeto.associacao.model.DocumentoAta;
 import com.projeto.associacao.service.DocumentoAtaService;
+import com.projeto.associacao.security.Permissoes;
 
 @RestController
 @RequestMapping("/api/documento-ata")
@@ -23,6 +25,7 @@ public class DocumentoAtaController {
 	private DocumentoAtaService service;
 
 	@GetMapping("/{id}/download")
+	@PreAuthorize("hasAuthority('" + Permissoes.ATA_DOCUMENTO_VISUALIZAR + "')")
 	public ResponseEntity<byte[]> download(@PathVariable int id) throws BusinessRuleException {
 		DocumentoAta documento = service.buscarParaDownloadOuFalhar(id);
 		return ResponseEntity.ok()
@@ -32,6 +35,7 @@ public class DocumentoAtaController {
 	}
 
 	@DeleteMapping("/{id}")
+	@PreAuthorize("hasAuthority('" + Permissoes.ATA_DOCUMENTO_GERENCIAR + "')")
 	public void remover(@PathVariable int id, Authentication authentication) throws BusinessRuleException {
 		service.remover(id, authentication.getName());
 	}
